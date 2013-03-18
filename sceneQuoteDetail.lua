@@ -5,6 +5,7 @@
 ---------------------------------------------------------------------------------
 
 local storyboard = require( "storyboard" )
+local ui = require( "ui")
 local scene = storyboard.newScene()
 --local grid = require( "grid" ) 
 --local KongsList = require( "KongsList" )
@@ -18,6 +19,7 @@ local listRecsDetailQuote = {}
 local list = nil
 local db
 local showDetails
+local screenGroup
 
 ---------------------------------------------------------------------------------
 -- BEGINNING OF YOUR IMPLEMENTATION
@@ -33,35 +35,6 @@ local function onSceneTouch( self, event )
 		return true
 	end
 end
-
-
-
---local function setUpDatabase(dbName)
---	
---	local path = system.pathForFile( dbName, system.DocumentsDirectory )
---	local file = io.open( path, "r" )
--- 
---	if ( file == nil ) then
---		-- copy the database file if doesn't exist
---		local pathSource     = system.pathForFile( dbName, system.ResourceDirectory )
---		local fileSource     = io.open( pathSource, "r" )
---		local contentsSource = fileSource:read( "*a" )
---                
---		local pathDest = system.pathForFile( dbName, system.DocumentsDirectory )
---		local fileDest = io.open( pathDest, "w" )
---		fileDest:write( contentsSource )
---            
---		io.close( fileSource )
---		io.close( fileDest )
---	end
---
---	local EskoDB = system.pathForFile(dbName, system.DocumentsDirectory)
---	local dbNew = sqlite3.open( EskoDB )
---
---	return dbNew
---
---end
-
 
 
 local function loadData()
@@ -80,13 +53,8 @@ local function loadData()
 		mcprice = a.MCPrice
 		}
 
-	end
-	
---	for x=1, #listRecsDetailQuote do
---		{
---			print ( "\n --  from the quote detail: " ..listRecsDetailQuote[x].Description
---		}
---	end
+end
+
 	
 	print( "finsihed loading detail data" )
 end
@@ -100,22 +68,22 @@ local function showRecords()
 		local idx = row.index or 1
 		local color = 0
 		
-		print( " in on row render description" )
-		print( " list rec description: " ..listRecsDetailQuote[idx].description)
+--		print( " in on row render description" )
+--		print( " list rec description: " ..listRecsDetailQuote[idx].description)
 		row.textObj = display.newRetinaText( listRecsDetailQuote[idx].description, 0, 0, "Helvetica", 12 )
 		row.textObj:setTextColor( color )
 		row.textObj:setReferencePoint( display.CenterLeftReferencePoint )
 		row.textObj.x = 20
 		row.textObj.y = rowGroup.contentHeight * 0.35
 		
-		print( " in on row render prod code" )
+--		print( " in on row render prod code" )
 		row.textObj2 = display.newRetinaText( listRecsDetailQuote[idx].productcode, 0, 0, "Helvetica", 9 )
 		row.textObj2:setTextColor( color )
 		row.textObj2:setReferencePoint( display.CenterLeftReferencePoint )
 		row.textObj2.x = 20
 		row.textObj2.y = rowGroup.contentHeight * 0.65
 		
-		print( " in del row " )
+--		print( " in del row " )
 		local function delRow( event )
 			print("Delete hit: " .. tostring(event.target.id))
 			local dbid = listRecsDetailQuote[event.target.id].id
@@ -126,7 +94,7 @@ local function showRecords()
 			-- deleteData(dbid)
 		end
 		
-		print( " in del button" )
+--		print( " in del button" )
 		row.delButton = widget.newButton{
 	        id = row.index,
 	        top = rowGroup.contentHeight * 0.1,
@@ -141,22 +109,7 @@ local function showRecords()
 	    	row.delButton.alpha = 1
 	    end
 		
---		row.thumbButton = widget.newButton{
---	        id = row.index,
---	        top = rowGroup.contentHeight*.05,
---	        left = 10,
---	        default = listRecsDetailQuote[idx].thumbnail,
---	        width = 132, height = 90,
---	        --onRelease = delRow
---	    }
---	    row.thumbButton.alpha = 0
---	    
---	    if listRecsDetailQuote[idx].showDel ~= true then
---	    	row.thumbButton.alpha = 1
---	    end
-	    
 		rowGroup:insert(row.delButton)
---		rowGroup:insert(row.thumbButton)
 		rowGroup:insert(row.textObj)
 		rowGroup:insert(row.textObj2)
 		
@@ -207,7 +160,18 @@ local function showRecords()
 	
 end -- showRecords
 
+local function backBtnRelease( event )
+	print("back button released")
+	--transition.to(myList, {time=400, x=0, transition=easing.outExpo })
+	--transition.to(sceneQuotes, {time=400, x=display.contentWidth, transition=easing.outExpo })
+	--transition.to(backBtn, {time=400, x=math.floor(backBtn.width/2)+backBtn.width, transition=easing.outExpo })
+	transition.to(priceBar, {time=400, alpha=0})
+	transition.to(priceHeader, {time=400, alpha=0})
+	transition.to(backBtn, {time=400, alpha=0 })
+	storyboard.gotoScene( "sceneQuotes", "fade", 400 ) 
 
+	--delta, velocity = 0, 0
+end
 
 -- Called when the scene's view does not exist:
 function scene:createScene( event )
@@ -259,7 +223,7 @@ function scene:createScene( event )
 	bg.y = display.contentHeight / 2 
 --	bg:setFillColor(80, 110, 200)
 	list = widget.newTableView {
-		top = top + 10,
+		top = top + 40,
 		height = 404,
 		maskFile = "mask404.png"
 	}
@@ -271,8 +235,37 @@ function scene:createScene( event )
 	loadData()
 	showRecords()
 	
+	--Setup the price bar 
+	print( "starting priceBar" )
+	priceBar = ui.newButton{
+		default = "assets/navBar.png",
+		onRelease = scrollToTop
+	}
+	priceBar.x = display.contentWidth*.5
+	--print ("priceBar coords: " ..display.contentWidth*.5 .."," ..display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
+	priceBar.y = math.floor(display.screenOriginY + display.statusBarHeight + 20) --navBar.height*0.5)
+
+	priceHeader = display.newText("Machine Price", 0, 0, native.systemFontBold, 16)
+	priceHeader:setTextColor(255, 255, 255)
+	priceHeader.x = display.contentWidth*.5
+	priceHeader.y = priceBar.y
+	--screenGroup:insert( priceHeader )
+	
+	--	--Setup the back button
+	backBtn = ui.newButton{ 
+		default = "assets/backButton.png", 
+		over = "assets/backButton_over.png", 
+		onRelease = backBtnRelease
+	}
+	backBtn.x = math.floor(backBtn.width/2) + 5 
+	backBtn.y = priceHeader.y 
+	backBtn.alpha = 1
+
+--	sceenGroup:insert( priceBar )
+--	screenGroup:insert( backBtn )
+	
 	---- create scene
-	print( "\n1: createScene Quote  event")
+	print( "\n1: created Scene Quote  event")
 end
 
 
@@ -294,6 +287,9 @@ function scene:enterScene( event )
 		memTimer = timer.performWithDelay( 1000, showMem, 1 )
 	end
 	
+	transition.to(priceBar, {time=400, alpha=1 })
+	transition.to(priceHeader, {time=400, alpha=1 })
+	transition.to(backBtn, {time=400, alpha=1 })
 end
 
 

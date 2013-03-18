@@ -31,12 +31,13 @@ local listRecsQuoteMain = {}
 local list = nil
 local showDetails
 
+
 local function setUpDatabase(dbName)
 	
 	local path = system.pathForFile( dbName, system.DocumentsDirectory )
 	
 	-- check global if we are working and building the DB it persists so we have to destroy it
-	if (true) then
+	if (_G.destroyDB) then
 		print("\n destroyed the cached DB: " .. path)
 		os.remove(path)
 	end
@@ -167,9 +168,6 @@ local function showRecords()
 			row.reRender = true
 			
 			_G.currIdx = row.index
---			storyboard.showOverlay( "storyboard-details", { effect="fade", params={lr = listRecsQuoteMain}, isModal=true } )
-print("row listener") 
-print( "select * from " ..listRecsQuoteMain[_G.currIdx].name )
 			local nm = listRecsQuoteMain[_G.currIdx].name 
 			storyboard.gotoScene( "sceneQuoteDetail", {effect="fade", params={nameToGet=nm, database=db}} )
 			-- go to new scene
@@ -250,18 +248,59 @@ function scene:createScene( event )
 	bg.x = display.contentWidth / 2
 	bg.y = display.contentHeight / 2 
 	
+	local topBoundary = display.screenOriginY + 60
+	local bottomBoundary = display.screenOriginY -290
+
 	list = widget.newTableView {
-		top = top + 10,
-		height = 404,
-		maskFile = "mask404.png"
+--		top = top + 10,
+--		height = 404,
+		top = topBoundary,
+		bottom = bottomBoundary,
+		--maskFile = "mask454.png",
+		width = 304
+--		height = 504
 	}
+	list.x = 8
+--	list.y = 5
+--	list.maskFile.x - 15
+--	list.maskFile = "mask404.png"
+	
 	screenGroup:insert(bg)
-	screenGroup:insert(list)
+	screenGroup:insert(list) 
 	
 	print( "\n1: inserted bg and list, createScene Quote  event")
-	
+
 	loadData()
 	showRecords()
+	
+	--Setup the nav bar 
+--	local navBar = ui.newButton{
+--		default = "assets/navBar.png",
+--		onRelease = scrollToTop
+--	}
+--	navBar.x = display.contentWidth*.5
+--	print ("navBar coords: " ..display.contentWidth*.5 .."," ..display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
+--	navBar.y = math.floor(display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
+--
+--	local navHeader = display.newText("Price", 0, 0, native.systemFontBold, 16)
+--	navHeader:setTextColor(255, 255, 255)
+--	navHeader.x = display.contentWidth*.5
+--	navHeader.y = navBar.y
+
+--	--Setup the back button
+--	backBtn = ui.newButton{ 
+--		default = "assets/backButton.png", 
+--		over = "assets/backButton_over.png", 
+--		onRelease = backBtnRelease
+--	}
+--	backBtn.x = math.floor(backBtn.width/2) + backBtn.width + screenOffsetW
+--	backBtn.y = navBar.y 
+--	backBtn.alpha = 0
+
+--	screenGroup:insert(navBar)
+--	screenGroup:insert(backBtn)
+	
+	
 	
 	---- create scene
 	print( "\n1: createScene Quote  event")
@@ -335,5 +374,5 @@ scene:addEventListener( "exitScene", scene )
 scene:addEventListener( "destroyScene", scene )
 
 ---------------------------------------------------------------------------------
-
 return scene
+------return scene
