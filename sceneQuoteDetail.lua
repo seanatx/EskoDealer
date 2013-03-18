@@ -20,6 +20,7 @@ local list = nil
 local db
 local showDetails
 local screenGroup
+local MachinePrice = 0
 
 ---------------------------------------------------------------------------------
 -- BEGINNING OF YOUR IMPLEMENTATION
@@ -40,7 +41,7 @@ end
 local function loadData()
 	local sql = "select * from " ..nameOfQuoteToGet --listRecsDetailQuote[_G.currIdx].name 
 	local i = 0
-	print( " ready to query details: " ..sql)
+--	print( " ready to query details: " ..sql)
 	for a in db:nrows(sql) do
 		listRecsDetailQuote[#listRecsDetailQuote+1] =
 		{
@@ -83,6 +84,11 @@ local function showRecords()
 		row.textObj2.x = 20
 		row.textObj2.y = rowGroup.contentHeight * 0.65
 		
+--		if listRecsDetailQuote[idx].ListPrice ~= nil then
+			print( "trying machineprice")
+			MachinePrice = MachinePrice + listRecsDetailQuote[idx].listprice
+--		end
+				
 --		print( " in del row " )
 		local function delRow( event )
 			print("Delete hit: " .. tostring(event.target.id))
@@ -173,6 +179,28 @@ local function backBtnRelease( event )
 	--delta, velocity = 0, 0
 end
 
+local function emailBtnRelease( event )
+	-- compose an HTML email with two attachments
+--	print ( "emailToRecip" )
+
+--	   to = "butch@gmail.com"
+	local options =
+	{
+
+	   bcc = { "emailtosalesforce@p4iylvcs2mvk3v4vacz4er5m674g69ltkdm9caay3qkp46c24.d-lccrmam.d.le.salesforce.com" },
+	   subject = "Kongsberg Quote",
+	   isBodyHtml = true,
+	   body = "<html><body>Kongsberg Quote <b>US$" ..MachinePrice .." </b>!!! Please call me with any questions you have</body></html>",
+	   --attachment =
+
+	}
+	native.showPopup("mail", options)
+--	   {
+--		  { baseDir=system.ResourceDirectory, filename="email.png", type="image" },
+--	   },	
+	-- NOTE: options table (and all child properties) are optional
+end
+
 -- Called when the scene's view does not exist:
 function scene:createScene( event )
 	print( "\n1: entering detail Quote create event")
@@ -245,11 +273,12 @@ function scene:createScene( event )
 	--print ("priceBar coords: " ..display.contentWidth*.5 .."," ..display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
 	priceBar.y = math.floor(display.screenOriginY + display.statusBarHeight + 20) --navBar.height*0.5)
 
-	priceHeader = display.newText("Machine Price", 0, 0, native.systemFontBold, 16)
+	priceHeader = display.newText("Price: $" ..string.format("%i",MachinePrice), 0, 0, native.systemFontBold, 16)
 	priceHeader:setTextColor(255, 255, 255)
 	priceHeader.x = display.contentWidth*.5
 	priceHeader.y = priceBar.y
-	--screenGroup:insert( priceHeader )
+	screenGroup:insert( priceBar )
+	screenGroup:insert( priceHeader )
 	
 	--	--Setup the back button
 	backBtn = ui.newButton{ 
@@ -260,6 +289,20 @@ function scene:createScene( event )
 	backBtn.x = math.floor(backBtn.width/2) + 5 
 	backBtn.y = priceHeader.y 
 	backBtn.alpha = 1
+	screenGroup:insert( backBtn )
+	
+		--	--Setup the email button
+	emailBtn = ui.newButton{ 
+		default = "assets/email.png", 
+		over = "assets/email.png", 
+		onRelease = emailBtnRelease
+	}
+	emailBtn.x = display.contentWidth - emailBtn.width + 5 
+	emailBtn.y = priceHeader.y 
+	emailBtn.alpha = 1
+	screenGroup:insert( emailBtn )
+	
+--	priceHeader.x = display.contentWidth - ( backBtn.contentWidth/2 )
 
 --	sceenGroup:insert( priceBar )
 --	screenGroup:insert( backBtn )
