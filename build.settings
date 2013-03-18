@@ -9,7 +9,7 @@ settings =
 			"landscapeLeft", "landscapeRight", "portrait",
 		},
 	},
-	
+	 
 	iphone =
 	{
 		plist =

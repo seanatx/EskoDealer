@@ -25,11 +25,12 @@ if string.sub(system.getInfo("model"),1,4) == "iPad" then
     }
 
 elseif string.sub(system.getInfo("model"),1,2) == "iP" and display.pixelHeight > 960 then
+	print("iPhone5 configuration detected")
     application = 
     {
         content =
         {
-            width = 320,
+            width = 320, 
             height = 568,
             scale = "letterBox",
             xAlign = "center",

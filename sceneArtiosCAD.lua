@@ -40,7 +40,7 @@ function scene:createScene( event )
 	local screenGroup = self.view
 	
 
-	image = display.newImageRect( "assets/Default-568h@2x.png", 360, 570 )
+	image = display.newImageRect( "assets/Default.png", 360, 570 )
 	image.x = display.contentWidth / 2
 	image.y = display.contentHeight / 2
 	screenGroup:insert( image )

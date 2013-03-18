@@ -5,6 +5,8 @@ local storyboard = require ( "storyboard" )
 --widget.setTheme( "theme_ios" )
 local bgrp = require("BgdGroup")
 _G.debug = false
+_G.destroyDB = false
+_G.EskoData = nil
 
 -- Background Width/Height/Alignment
 
@@ -13,8 +15,8 @@ _G.debug = false
 --local backgroundHeight = 480
 
 --Android
-local backgroundWidth = 360 
-local backgroundHeight = 570
+--local backgroundWidth = 360 
+--local backgroundHeight = 570
 
 -- iPhone5
 --local backgroundWidth = 640
@@ -33,4 +35,4 @@ local demoTabs = widget.newTabBar{
 }
 
 -- load first scene
-storyboard.gotoScene( "sceneSplash", "fade", 400 ) 
+storyboard.gotoScene( "sceneSplash", "fade", 400 )  

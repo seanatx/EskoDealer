@@ -7,10 +7,18 @@
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 --local grid = require( "grid" ) 
+--local KongsList = require( "KongsList" )
 local widget = require("widget")
 require "sqlite3"
+--local screenGroup
+local nameOfQuoteToGet
 local image
+local top = display.statusBarHeight*2
+local listRecsDetailQuote = {}
+local list = nil
 local db
+local showDetails
+
 ---------------------------------------------------------------------------------
 -- BEGINNING OF YOUR IMPLEMENTATION
 ---------------------------------------------------------------------------------
@@ -26,64 +34,62 @@ local function onSceneTouch( self, event )
 	end
 end
 
-local top = display.statusBarHeight*2
-local listRecsQuoteMain = {}
-local list = nil
-local showDetails
 
-local function setUpDatabase(dbName)
-	
-	local path = system.pathForFile( dbName, system.DocumentsDirectory )
-	
-	-- check global if we are working and building the DB it persists so we have to destroy it
-	if (true) then
-		print("\n destroyed the cached DB: " .. path)
-		os.remove(path)
-	end
-	
-	local file = io.open( path, "r" )
- 
-	if ( file == nil ) then
-		-- copy the database file if doesn't exist
-		local pathSource     = system.pathForFile( dbName, system.ResourceDirectory )
-		local fileSource     = io.open( pathSource, "r" )
-		local contentsSource = fileSource:read( "*a" )
-                
-		local pathDest = system.pathForFile( dbName, system.DocumentsDirectory )
-		local fileDest = io.open( pathDest, "w" )
-		fileDest:write( contentsSource )
-            
-		io.close( fileSource )
-		io.close( fileDest )
-	end
 
-	local EskoDB = system.pathForFile(dbName, system.DocumentsDirectory)
-	local dbNew = sqlite3.open( EskoDB )
-	db = dbNew
-	
-	return dbNew
-
-end
+--local function setUpDatabase(dbName)
+--	
+--	local path = system.pathForFile( dbName, system.DocumentsDirectory )
+--	local file = io.open( path, "r" )
+-- 
+--	if ( file == nil ) then
+--		-- copy the database file if doesn't exist
+--		local pathSource     = system.pathForFile( dbName, system.ResourceDirectory )
+--		local fileSource     = io.open( pathSource, "r" )
+--		local contentsSource = fileSource:read( "*a" )
+--                
+--		local pathDest = system.pathForFile( dbName, system.DocumentsDirectory )
+--		local fileDest = io.open( pathDest, "w" )
+--		fileDest:write( contentsSource )
+--            
+--		io.close( fileSource )
+--		io.close( fileDest )
+--	end
+--
+--	local EskoDB = system.pathForFile(dbName, system.DocumentsDirectory)
+--	local dbNew = sqlite3.open( EskoDB )
+--
+--	return dbNew
+--
+--end
 
 
 
 local function loadData()
-	local sql = "select * from projects"
-	
+	local sql = "select * from " ..nameOfQuoteToGet --listRecsDetailQuote[_G.currIdx].name 
+	local i = 0
+	print( " ready to query details: " ..sql)
 	for a in db:nrows(sql) do
-		listRecsQuoteMain[#listRecsQuoteMain+1] =
+		listRecsDetailQuote[#listRecsDetailQuote+1] =
 		{
 		id = a.id,
-		name = a.name,
-		category = a.category,
-		rating = a.rating,
-		thumbnail = a.thumb,
-		--print ( "from DB: " ..a.thumb)
+		productcode = a.ProductCode,
+		description = a.Description,
+		quantity = a.Quantity,
+		listprice = a.ListPrice,
+		discountable = a.Discountable,
+		mcprice = a.MCPrice
 		}
+
 	end
+	
+--	for x=1, #listRecsDetailQuote do
+--		{
+--			print ( "\n --  from the quote detail: " ..listRecsDetailQuote[x].Description
+--		}
+--	end
+	
+	print( "finsihed loading detail data" )
 end
-
-
 
 
 local function showRecords()
@@ -91,61 +97,66 @@ local function showRecords()
 	local function onRowRender( event )
 		local row = event.row
 		local rowGroup = event.view
-		local idx = row.index or 0
+		local idx = row.index or 1
 		local color = 0
 		
-		row.textObj = display.newRetinaText( listRecsQuoteMain[idx].name, 0, 0, "Helvetica", 16 )
+		print( " in on row render description" )
+		print( " list rec description: " ..listRecsDetailQuote[idx].description)
+		row.textObj = display.newRetinaText( listRecsDetailQuote[idx].description, 0, 0, "Helvetica", 12 )
 		row.textObj:setTextColor( color )
 		row.textObj:setReferencePoint( display.CenterLeftReferencePoint )
-		row.textObj.x = 150
+		row.textObj.x = 20
 		row.textObj.y = rowGroup.contentHeight * 0.35
 		
-		row.textObj2 = display.newRetinaText( listRecsQuoteMain[idx].category, 0, 0, "Helvetica", 12 )
+		print( " in on row render prod code" )
+		row.textObj2 = display.newRetinaText( listRecsDetailQuote[idx].productcode, 0, 0, "Helvetica", 9 )
 		row.textObj2:setTextColor( color )
 		row.textObj2:setReferencePoint( display.CenterLeftReferencePoint )
-		row.textObj2.x = 150
+		row.textObj2.x = 20
 		row.textObj2.y = rowGroup.contentHeight * 0.65
 		
+		print( " in del row " )
 		local function delRow( event )
 			print("Delete hit: " .. tostring(event.target.id))
-			local dbid = listRecsQuoteMain[event.target.id].id
+			local dbid = listRecsDetailQuote[event.target.id].id
 			list:deleteRow(event.target.id)
-			table.remove(listRecsQuoteMain, event.target.id)
+			table.remove(listRecsDetailQuote, event.target.id)
 			display.remove( detailGrp )
 			-- delete from database
 			-- deleteData(dbid)
 		end
 		
+		print( " in del button" )
 		row.delButton = widget.newButton{
 	        id = row.index,
-	        top = rowGroup.contentHeight * 0.2,
-	        left = rowGroup.contentWidth - 90,
+	        top = rowGroup.contentHeight * 0.1,
+	        left = rowGroup.contentWidth - 80,
 	        default = "deletebtn.png",
 	        width = 64, height = 33,
 	        onRelease = delRow
 	    }
 	    row.delButton.alpha = 0
 	    
-	    if listRecsQuoteMain[idx].showDel == true then
+	    if listRecsDetailQuote[idx].showDel == true then
 	    	row.delButton.alpha = 1
 	    end
 		
-		row.thumbButton = widget.newButton{
-	        id = row.index,
-	        top = rowGroup.contentHeight*.05,
-	        left = 10,
-	        default = listRecsQuoteMain[idx].thumbnail,
-	        width = 132, height = 90,
-	        --onRelease = delRow
-	    }
-	    row.thumbButton.alpha = 0
-	    
-	    if listRecsQuoteMain[idx].showDel ~= true then
-	    	row.thumbButton.alpha = 1
-	    end
+--		row.thumbButton = widget.newButton{
+--	        id = row.index,
+--	        top = rowGroup.contentHeight*.05,
+--	        left = 10,
+--	        default = listRecsDetailQuote[idx].thumbnail,
+--	        width = 132, height = 90,
+--	        --onRelease = delRow
+--	    }
+--	    row.thumbButton.alpha = 0
+--	    
+--	    if listRecsDetailQuote[idx].showDel ~= true then
+--	    	row.thumbButton.alpha = 1
+--	    end
 	    
 		rowGroup:insert(row.delButton)
-		rowGroup:insert(row.thumbButton)
+--		rowGroup:insert(row.thumbButton)
 		rowGroup:insert(row.textObj)
 		rowGroup:insert(row.textObj2)
 		
@@ -166,22 +177,18 @@ local function showRecords()
 			--background:setFillColor( 196, 255, 156, 255 )
 			row.reRender = true
 			
-			_G.currIdx = row.index
---			storyboard.showOverlay( "storyboard-details", { effect="fade", params={lr = listRecsQuoteMain}, isModal=true } )
-print("row listener") 
-print( "select * from " ..listRecsQuoteMain[_G.currIdx].name )
-			local nm = listRecsQuoteMain[_G.currIdx].name 
-			storyboard.gotoScene( "sceneQuoteDetail", {effect="fade", params={nameToGet=nm, database=db}} )
-			-- go to new scene
+--			_G.currIdx = row.index
+--			storyboard.showOverlay( "storyboard-details", { effect="fade", params={lr = listRecsDetailQuote}, isModal=true } )
+--			-- go to new scene
 			
 		elseif phase == "swipeLeft" then
 			print( "Swiped Left row: " .. row.index )
-			listRecsQuoteMain[row.index].showDel = true
+			listRecsDetailQuote[row.index].showDel = true
 			row.reRender = true
 			    
     	elseif phase == "swipeRight" then
 			print( "Swiped Right row: " .. row.index )
-			listRecsQuoteMain[row.index].showDel = false
+			listRecsDetailQuote[row.index].showDel = false
 			display.remove( row.delButton )
 			
 		end
@@ -190,9 +197,9 @@ print( "select * from " ..listRecsQuoteMain[_G.currIdx].name )
 	end -- rowListener
 	
 
-	for x = 1, #listRecsQuoteMain do
+	for x = 1, #listRecsDetailQuote do
 		list:insertRow {
-			height = 100,
+			height = 40,
 			onRender = onRowRender,
 			listener = rowListener
 		}
@@ -204,9 +211,11 @@ end -- showRecords
 
 -- Called when the scene's view does not exist:
 function scene:createScene( event )
-	print( "\n1: entering createScene Quote  event")
+	print( "\n1: entering detail Quote create event")
 	screenGroup = self.view
-
+--	listRecsDetailQuote = event.params.lr
+	nameOfQuoteToGet = event.params.nameToGet
+	db = event.params.database
 	--image = display.newImageRect( "assets/Default-568h@2x.png", 360, 570 )
 	--image.x = display.contentWidth / 2
 	--image.y = display.contentHeight / 2
@@ -240,16 +249,15 @@ function scene:createScene( event )
 	-- next 2 lines draw a grid (see grid.lua )
 	-- local t = createGrid( design, data )
 	-- t.x, t.y = 30, 150
-	print( "\n1: starting list loading createScene Quote  event")
+	print( "\n1: starting detail list loading  Quote  event")
 	
-	db = setUpDatabase("EskoData.sqlite")
+--	db = setUpDatabase("EskoData.sqlite")
 
 --	local bg = display.newRect( 0, top, display.contentWidth, display.contentHeight - top)
---	bg:setFillColor(127, 127, 127)
-	local bg = display.newImageRect( "assets/EskoStripeBG5.png", display.contentWidth, display.contentHeight - top )
+	local bg = display.newImageRect( "assets/EskoStripeBG5.png", 360, 570 )
 	bg.x = display.contentWidth / 2
 	bg.y = display.contentHeight / 2 
-	
+--	bg:setFillColor(80, 110, 200)
 	list = widget.newTableView {
 		top = top + 10,
 		height = 404,
@@ -258,7 +266,7 @@ function scene:createScene( event )
 	screenGroup:insert(bg)
 	screenGroup:insert(list)
 	
-	print( "\n1: inserted bg and list, createScene Quote  event")
+	print( "\n1: inserted detailed bg and list, createScene Quote  event")
 	
 	loadData()
 	showRecords()
@@ -305,7 +313,7 @@ function scene:exitScene( event )
 	end
 	
 	--storyboard.purgeScene( "sceneQuotes" )
-	print( "Quote: leaving exitScene event" ) 
+	print( "Quote: leaving exitScene event" )
 end
 
 

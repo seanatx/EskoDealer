@@ -32,6 +32,7 @@ function new(params)
 
 	-- setup a group to be the scrolling screen
 	local scrollNav = display.newGroup()
+
 	
 	-- Add transparent background to the scroll view for a full screen hit area
 	scrollBackground = display.newRect(0, 0, display.contentWidth, display.contentHeight - 50 - display.screenOriginY)

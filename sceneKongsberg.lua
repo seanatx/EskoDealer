@@ -39,7 +39,7 @@ local function onOrientationEventArtiosCAD( event )
 		-- load landscape
 		--local screenGroup = self.view
 		-- screenGroup:removeObject("portrait")
-		image = display.newImageRect( "assets/EskoBgdLand5.png", 570, 360 )
+		image = display.newImageRect( "assets/Default.png", 360, 570 )
 		image.x = display.contentWidth / 2
 		image.y = display.contentHeight / 2
 		screenGroup:insert( image )
@@ -66,7 +66,7 @@ function scene:createScene( event )
 	-- Add the scrollbar to the scrollNav
 	self.scrollNav:addScrollBar(scrollbarY)
 	
-	image = display.newImageRect( "assets/Default-568h@2x.png", 360, 570 )
+	image = display.newImageRect( "assets/Default.png", 360, 570 )
 	image.x = display.contentWidth / 2
 	image.y = display.contentHeight / 2
 	image.name = "portrait"
