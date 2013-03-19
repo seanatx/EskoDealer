@@ -271,36 +271,7 @@ function scene:createScene( event )
 	print( "\n1: inserted bg and list, createScene Quote  event")
 
 	loadData()
-	showRecords()
-	
-	--Setup the nav bar 
---	local navBar = ui.newButton{
---		default = "assets/navBar.png",
---		onRelease = scrollToTop
---	}
---	navBar.x = display.contentWidth*.5
---	print ("navBar coords: " ..display.contentWidth*.5 .."," ..display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
---	navBar.y = math.floor(display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
---
---	local navHeader = display.newText("Price", 0, 0, native.systemFontBold, 16)
---	navHeader:setTextColor(255, 255, 255)
---	navHeader.x = display.contentWidth*.5
---	navHeader.y = navBar.y
-
---	--Setup the back button
---	backBtn = ui.newButton{ 
---		default = "assets/backButton.png", 
---		over = "assets/backButton_over.png", 
---		onRelease = backBtnRelease
---	}
---	backBtn.x = math.floor(backBtn.width/2) + backBtn.width + screenOffsetW
---	backBtn.y = navBar.y 
---	backBtn.alpha = 0
-
---	screenGroup:insert(navBar)
---	screenGroup:insert(backBtn)
-	
-	
+	showRecords()	
 	
 	---- create scene
 	print( "\n1: createScene Quote  event")

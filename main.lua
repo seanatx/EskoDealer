@@ -5,7 +5,7 @@ local storyboard = require ( "storyboard" )
 --widget.setTheme( "theme_ios" )
 local bgrp = require("BgdGroup")
 _G.debug = false
-_G.destroyDB = false
+_G.destroyDB = true
 _G.EskoData = nil
 
 -- Background Width/Height/Alignment

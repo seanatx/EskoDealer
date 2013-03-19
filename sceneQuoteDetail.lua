@@ -5,13 +5,12 @@
 ---------------------------------------------------------------------------------
 
 local storyboard = require( "storyboard" )
+local email = require( "email" )
 local ui = require( "ui")
 local scene = storyboard.newScene()
---local grid = require( "grid" ) 
---local KongsList = require( "KongsList" )
 local widget = require("widget")
 require "sqlite3"
---local screenGroup
+local emailSending = nil
 local nameOfQuoteToGet
 local image
 local top = display.statusBarHeight*2
@@ -60,17 +59,23 @@ end
 	print( "finsihed loading detail data" )
 end
 
+local function resetMachinePrice()
+	MachinePrice = 0
+	for x = 1, #listRecsDetailQuote do
+		MachinePrice = MachinePrice + listRecsDetailQuote[x].listprice
+	end
+	print( "new price calculated: " .. MachinePrice )
+--	priceHeader.text = "" .. MachinePrice
+end
 
 local function showRecords()
-	
 	local function onRowRender( event )
 		local row = event.row
 		local rowGroup = event.view
-		local idx = row.index or 1
+		local idx = row.index or 0
 		local color = 0
 		
 --		print( " in on row render description" )
---		print( " list rec description: " ..listRecsDetailQuote[idx].description)
 		row.textObj = display.newRetinaText( listRecsDetailQuote[idx].description, 0, 0, "Helvetica", 12 )
 		row.textObj:setTextColor( color )
 		row.textObj:setReferencePoint( display.CenterLeftReferencePoint )
@@ -84,20 +89,20 @@ local function showRecords()
 		row.textObj2.x = 20
 		row.textObj2.y = rowGroup.contentHeight * 0.65
 		
---		if listRecsDetailQuote[idx].ListPrice ~= nil then
-			print( "trying machineprice")
-			MachinePrice = MachinePrice + listRecsDetailQuote[idx].listprice
---		end
-				
---		print( " in del row " )
+		--MachinePrice = MachinePrice + listRecsDetailQuote[idx].listprice
+					
 		local function delRow( event )
+			print( " in del row " )
 			print("Delete hit: " .. tostring(event.target.id))
 			local dbid = listRecsDetailQuote[event.target.id].id
 			list:deleteRow(event.target.id)
 			table.remove(listRecsDetailQuote, event.target.id)
 			display.remove( detailGrp )
+			resetMachinePrice()
+			priceHeader.text = "Price: $" .. MachinePrice
 			-- delete from database
 			-- deleteData(dbid)
+			------------  etend to make a new table from user data and be able to reload -------------
 		end
 		
 --		print( " in del button" )
@@ -129,6 +134,7 @@ local function showRecords()
 		
 		if phase == "press" then
 			print( "Pressed row: " .. row.index )
+			print( "\n " .. listRecsDetailQuote[row.index].listprice ) 
 			background:setFillColor( 196, 255, 156, 255 )
 			
 		elseif phase == "release" or phase == "tap" then
@@ -166,6 +172,8 @@ local function showRecords()
 	
 end -- showRecords
 
+
+
 local function backBtnRelease( event )
 	print("back button released")
 	--transition.to(myList, {time=400, x=0, transition=easing.outExpo })
@@ -181,24 +189,10 @@ end
 
 local function emailBtnRelease( event )
 	-- compose an HTML email with two attachments
---	print ( "emailToRecip" )
-
---	   to = "butch@gmail.com"
-	local options =
-	{
-
-	   bcc = { "emailtosalesforce@p4iylvcs2mvk3v4vacz4er5m674g69ltkdm9caay3qkp46c24.d-lccrmam.d.le.salesforce.com" },
-	   subject = "Kongsberg Quote",
-	   isBodyHtml = true,
-	   body = "<html><body>Kongsberg Quote <b>US$" ..MachinePrice .." </b>!!! Please call me with any questions you have</body></html>",
-	   --attachment =
-
-	}
-	native.showPopup("mail", options)
---	   {
---		  { baseDir=system.ResourceDirectory, filename="email.png", type="image" },
---	   },	
-	-- NOTE: options table (and all child properties) are optional
+	if emailSending == nil then
+		emailSending = email.new( "XE10", listRecsDetailQuote )
+	end
+	emailSending:send()	
 end
 
 -- Called when the scene's view does not exist:
@@ -241,15 +235,10 @@ function scene:createScene( event )
 	-- next 2 lines draw a grid (see grid.lua )
 	-- local t = createGrid( design, data )
 	-- t.x, t.y = 30, 150
-	print( "\n1: starting detail list loading  Quote  event")
-	
---	db = setUpDatabase("EskoData.sqlite")
-
---	local bg = display.newRect( 0, top, display.contentWidth, display.contentHeight - top)
+--	print( "\n1: starting detail list loading  Quote  event")
 	local bg = display.newImageRect( "assets/EskoStripeBG5.png", 360, 570 )
 	bg.x = display.contentWidth / 2
 	bg.y = display.contentHeight / 2 
---	bg:setFillColor(80, 110, 200)
 	list = widget.newTableView {
 		top = top + 40,
 		height = 404,
@@ -272,7 +261,7 @@ function scene:createScene( event )
 	priceBar.x = display.contentWidth*.5
 	--print ("priceBar coords: " ..display.contentWidth*.5 .."," ..display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
 	priceBar.y = math.floor(display.screenOriginY + display.statusBarHeight + 20) --navBar.height*0.5)
-
+	resetMachinePrice()
 	priceHeader = display.newText("Price: $" ..string.format("%i",MachinePrice), 0, 0, native.systemFontBold, 16)
 	priceHeader:setTextColor(255, 255, 255)
 	priceHeader.x = display.contentWidth*.5
@@ -301,7 +290,7 @@ function scene:createScene( event )
 	emailBtn.y = priceHeader.y 
 	emailBtn.alpha = 1
 	screenGroup:insert( emailBtn )
-	
+	 
 --	priceHeader.x = display.contentWidth - ( backBtn.contentWidth/2 )
 
 --	sceenGroup:insert( priceBar )
