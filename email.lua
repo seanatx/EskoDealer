@@ -11,7 +11,7 @@ local email_mt = { __index = email }
 local options = {  
 					to = "",
 					bcc = "emailtosalesforce@p4iylvcs2mvk3v4vacz4er5m674g69ltkdm9caay3qkp46c24.d-lccrmam.d.le.salesforce.com" ,
-					subject = "Kongsberg quote for ",
+					subject = "Kongsberg cutting machine quote ",
 					isBodyHtml = true,
 					body = bodytext
 				}
@@ -50,36 +50,30 @@ end
 
 local function extractQuoteData()
 	for x = 1, #listRecsDetailQuote do
-		bodytext = bodytext .. listRecsDetailQuote[x].description
+		bodytext = bodytext .. paraOpen .. listRecsDetailQuote[x].description .. paraClose .. "\n"
 		cost = cost + listRecsDetailQuote[x].listprice
 	end
-	
 end
 
 local function buildEmailContent()
 	-- do something
-	print( "building email" )
-	
+--	print( "building email" )
 	bodytext = ""
 	cost = 0
 	extractQuoteData()
-	local openHtmlText = bodytext .. htmlOpen .. bodytext ..bodyOpen .. headerOpen .. options["subject"] .. tableName .. " : $" .. cost ..headerClose .."\n\n"
-	local closeHtmlText = "\n\n " .. bodytext .. bodyClose .. htmlClose
-
-	bodytext = openHtmlText .. closeHtmlText
+	local openHtmlText = htmlOpen ..bodyOpen .. headerOpen .. options["subject"] .. tableName .. " : $" .. cost ..headerClose .. paraOpen .. "\n\n"
+	local closeHtmlText = paraClose .. "\n\n " .. bodyClose .. htmlClose
+	bodytext = openHtmlText .. bodytext .. closeHtmlText
 	options["body"] = bodytext
-	print( "bodytext: \n" .. options["body"])
+--	print( "bodytext: \n" .. options["body"])
 end
 	
 local function sendEmail()
 	buildEmailContent()
 	if system.getInfo ("environment") == "simulator" then
-		print ( "---\n\native.cancelAlert------- email simulator -------------")
-		print ( "email body for: " .. tableName)
-		
---		for key,value in pairs(options) do
---        	print( key, value )
---    	end
+		print ( "\n \n ------------ email simulator -------------")
+		print ( "email body for: " .. tableName .. "\n" )
+		print ( options["body"] )
 	else
 		native.showPopup("mail", options)
 	end

@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------
 --
--- scene1.lua
+-- sceneQoteDetail.lua
 --
 ---------------------------------------------------------------------------------
 
@@ -25,7 +25,6 @@ local MachinePrice = 0
 -- BEGINNING OF YOUR IMPLEMENTATION
 ---------------------------------------------------------------------------------
 
-
 -- Touch event listener for background image
 local function onSceneTouch( self, event )
 	if event.phase == "began" then
@@ -35,7 +34,6 @@ local function onSceneTouch( self, event )
 		return true
 	end
 end
-
 
 local function loadData()
 	local sql = "select * from " ..nameOfQuoteToGet --listRecsDetailQuote[_G.currIdx].name 
@@ -53,9 +51,7 @@ local function loadData()
 		mcprice = a.MCPrice
 		}
 
-end
-
-	
+	end
 	print( "finsihed loading detail data" )
 end
 
@@ -179,16 +175,16 @@ local function backBtnRelease( event )
 	--transition.to(myList, {time=400, x=0, transition=easing.outExpo })
 	--transition.to(sceneQuotes, {time=400, x=display.contentWidth, transition=easing.outExpo })
 	--transition.to(backBtn, {time=400, x=math.floor(backBtn.width/2)+backBtn.width, transition=easing.outExpo })
-	transition.to(priceBar, {time=400, alpha=0})
-	transition.to(priceHeader, {time=400, alpha=0})
-	transition.to(backBtn, {time=400, alpha=0 })
+	transition.to(priceBar, {time=100, alpha=0})
+	transition.to(priceHeader, {time=00, alpha=0})
+	transition.to(backBtn, {time=100, alpha=0 })
 	storyboard.gotoScene( "sceneQuotes", "fade", 400 ) 
 
 	--delta, velocity = 0, 0
 end
 
 local function emailBtnRelease( event )
-	-- compose an HTML email with two attachments
+	-- compose an HTML email 
 	if emailSending == nil then
 		emailSending = email.new( "XE10", listRecsDetailQuote )
 	end
@@ -238,7 +234,7 @@ function scene:createScene( event )
 --	print( "\n1: starting detail list loading  Quote  event")
 	local bg = display.newImageRect( "assets/EskoStripeBG5.png", 360, 570 )
 	bg.x = display.contentWidth / 2
-	bg.y = display.contentHeight / 2 
+	bg.y = display.contentHeight / 2 + display.statusBarHeight
 	list = widget.newTableView {
 		top = top + 40,
 		height = 404,
@@ -260,7 +256,7 @@ function scene:createScene( event )
 	}
 	priceBar.x = display.contentWidth*.5
 	--print ("priceBar coords: " ..display.contentWidth*.5 .."," ..display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
-	priceBar.y = math.floor(display.screenOriginY + display.statusBarHeight + 20) --navBar.height*0.5)
+	priceBar.y = math.floor(display.screenOriginY + display.statusBarHeight + 19) --navBar.height*0.5)
 	resetMachinePrice()
 	priceHeader = display.newText("Price: $" ..string.format("%i",MachinePrice), 0, 0, native.systemFontBold, 16)
 	priceHeader:setTextColor(255, 255, 255)
@@ -283,7 +279,7 @@ function scene:createScene( event )
 		--	--Setup the email button
 	emailBtn = ui.newButton{ 
 		default = "assets/email.png", 
-		over = "assets/email.png", 
+		over = "assets/email-down.png", 
 		onRelease = emailBtnRelease
 	}
 	emailBtn.x = display.contentWidth - emailBtn.width + 5 

@@ -1,6 +1,6 @@
 ---------------------------------------------------------------------------------
 --
--- scene1.lua
+-- sceneQuote.lua
 --
 ---------------------------------------------------------------------------------
 
@@ -12,9 +12,8 @@ require "sqlite3"
 local image
 local db
 ---------------------------------------------------------------------------------
--- BEGINNING OF YOUR IMPLEMENTATION
+-- 
 ---------------------------------------------------------------------------------
-
 
 -- Touch event listener for background image
 local function onSceneTouch( self, event )
@@ -30,7 +29,6 @@ local top = display.statusBarHeight*2
 local listRecsQuoteMain = {}
 local list = nil
 local showDetails
-
 
 local function setUpDatabase(dbName)
 	
@@ -66,8 +64,6 @@ local function setUpDatabase(dbName)
 
 end
 
-
-
 local function loadData()
 	local sql = "select * from projects"
 	
@@ -83,9 +79,6 @@ local function loadData()
 		}
 	end
 end
-
-
-
 
 local function showRecords()
 	
@@ -164,7 +157,6 @@ local function showRecords()
 			
 		elseif phase == "release" or phase == "tap" then
 			print( "Tapped and/or Released row: " .. row.index )
-			--background:setFillColor( 196, 255, 156, 255 )
 			row.reRender = true
 			
 			_G.currIdx = row.index
@@ -194,7 +186,7 @@ local function showRecords()
 			onRender = onRowRender,
 			listener = rowListener
 		}
-	end	
+	end	-- set up listview
 	
 end -- showRecords
 
@@ -204,11 +196,6 @@ end -- showRecords
 function scene:createScene( event )
 	print( "\n1: entering createScene Quote  event")
 	screenGroup = self.view
-
-	--image = display.newImageRect( "assets/Default-568h@2x.png", 360, 570 )
-	--image.x = display.contentWidth / 2
-	--image.y = display.contentHeight / 2
-	--screenGroup:insert( image )
 	
 	if (_G.debug) then
 		image = display.newRect(0, 0, display.contentWidth, display.contentHeight)
@@ -238,15 +225,13 @@ function scene:createScene( event )
 	-- next 2 lines draw a grid (see grid.lua )
 	-- local t = createGrid( design, data )
 	-- t.x, t.y = 30, 150
-	print( "\n1: starting list loading createScene Quote  event")
-	
+--	print( "\n1: starting list loading createScene Quote  event")
+
 	db = setUpDatabase("EskoData.sqlite")
 
---	local bg = display.newRect( 0, top, display.contentWidth, display.contentHeight - top)
---	bg:setFillColor(127, 127, 127)
 	local bg = display.newImageRect( "assets/EskoStripeBG5.png", display.contentWidth, display.contentHeight - top )
 	bg.x = display.contentWidth / 2
-	bg.y = display.contentHeight / 2 
+	bg.y = display.contentHeight / 2 + display.statusBarHeight
 	
 	local topBoundary = display.screenOriginY + 60
 	local bottomBoundary = display.screenOriginY -290
@@ -268,7 +253,7 @@ function scene:createScene( event )
 	screenGroup:insert(bg)
 	screenGroup:insert(list) 
 	
-	print( "\n1: inserted bg and list, createScene Quote  event")
+--	print( "\n1: inserted bg and list, createScene Quote  event")
 
 	loadData()
 	showRecords()	
@@ -282,9 +267,6 @@ end
 function scene:enterScene( event )
 	screenGroup = self.view
 	print( "1: enterScene Quote event" )
-	
-	-- remove previous scene's view
-	--storyboard.purgeScene( "scene4" )
 	if (_G.debug) then
 		-- Update Lua memory text display
 		local showMem = function()
@@ -309,7 +291,6 @@ function scene:exitScene( event )
 		image:removeEventListener( "touch", image )
 		-- cancel timer
 		timer.cancel( memTimer ); memTimer = nil;
-	
 		-- reset label text
 		text2.text = "MemUsage: "
 	end
