@@ -104,7 +104,7 @@ local function showRecords()
 --		print( " in del button" )
 		row.delButton = widget.newButton{
 	        id = row.index,
-	        top = rowGroup.contentHeight * 0.1,
+	        top = rowGroup.contentHeight * 0.05,
 	        left = rowGroup.contentWidth - 80,
 	        default = "deletebtn.png",
 	        width = 64, height = 33,
