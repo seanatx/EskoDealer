@@ -5,6 +5,8 @@
 ---------------------------------------------------------------------------------
 
 local storyboard = require( "storyboard" )
+local appswitch = require( "appSwitch" )
+local stringutils = require( "stringUtils" )
 local email = require( "email" )
 local ui = require( "ui")
 local scene = storyboard.newScene()
@@ -20,10 +22,12 @@ local db
 local showDetails
 local screenGroup
 local MachinePrice = 0
+local priceBar
 
 ---------------------------------------------------------------------------------
 -- BEGINNING OF YOUR IMPLEMENTATION
 ---------------------------------------------------------------------------------
+local strutils = stringutils.new()
 
 -- Touch event listener for background image
 local function onSceneTouch( self, event )
@@ -48,12 +52,15 @@ local function loadData()
 		quantity = a.Quantity,
 		listprice = a.ListPrice,
 		discountable = a.Discountable,
-		mcprice = a.MCPrice
+		mcprice = a.MCPrice,
+		master = a.Master,
+		subordinate = a.Subordinate
 		}
 
 	end
-	print( "finsihed loading detail data" )
+--	print( "finsihed loading detail data" )
 end
+
 
 local function resetMachinePrice()
 	MachinePrice = 0
@@ -64,6 +71,54 @@ local function resetMachinePrice()
 --	priceHeader.text = "" .. MachinePrice
 end
 
+
+local function markLinkedBundle(event)
+--	print( "entering MS test")
+	local index = event.row.index
+	local mstr = listRecsDetailQuote[index].master
+--	print( mstr )
+	if mstr ~= "" then -- we have a subordinate, find the master, then process subs list
+		local mstrProdCode = listRecsDetailQuote[index].master
+		for x = 1, #listRecsDetailQuote do
+			if listRecsDetailQuote[x].productcode == mstrProdCode then
+				--- now do a subordinate discovery
+				local subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
+			end -- end if
+		end -- end forloop
+	else
+--	if mstr == "" then  -- we have a master, get sub list and process
+		local subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
+		for k, v in pairs (subslist) do
+			for x = 1, #listRecsDetailQuote do
+				if listRecsDetailQuote[x].productcode == v then
+					--event.row.showDel = true
+					listRecsDetailQuote[x].showLink = true
+					event.parent.content.rows[x].reRender = true
+				end -- end if
+			end -- end forloop
+		end -- end for loop
+	end -- end ifelse
+end
+	
+local function unmarkLinkedBundle(event)
+	local index = event.row.index
+	local mstr = listRecsDetailQuote[index].master
+	if mstr == "" then  -- we have a sub list
+		local subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
+		for k, v in pairs (subslist) do
+			for x = 1, #listRecsDetailQuote do
+				if listRecsDetailQuote[x].productcode == v then
+					local r = event.parent.content.rows
+					listRecsDetailQuote[x].showLink = false
+					r[x].reRender = true
+				end
+			end
+		end
+	else
+	-- look to subordiantes for a master
+	end   
+end	
+			
 local function showRecords()
 	local function onRowRender( event )
 		local row = event.row
@@ -91,11 +146,13 @@ local function showRecords()
 			print( " in del row " )
 			print("Delete hit: " .. tostring(event.target.id))
 			local dbid = listRecsDetailQuote[event.target.id].id
-			list:deleteRow(event.target.id)
-			table.remove(listRecsDetailQuote, event.target.id)
-			display.remove( detailGrp )
-			resetMachinePrice()
-			priceHeader.text = "Price: $" .. MachinePrice
+			
+
+--			list:deleteRow(event.target.id)
+--			table.remove(listRecsDetailQuote, event.target.id)
+--			display.remove( detailGrp )
+--			resetMachinePrice()
+--			priceHeader.text = "Price: $" .. MachinePrice
 			-- delete from database
 			-- deleteData(dbid)
 			------------  etend to make a new table from user data and be able to reload -------------
@@ -111,12 +168,30 @@ local function showRecords()
 	        onRelease = delRow
 	    }
 	    row.delButton.alpha = 0
-	    
 	    if listRecsDetailQuote[idx].showDel == true then
 	    	row.delButton.alpha = 1
 	    end
+	    	    
+	    --		print( " in del button" )
+		row.linkButton = widget.newButton{
+	        id = row.index,
+	        top = rowGroup.contentHeight * 0.1,
+	        left = rowGroup.contentWidth - rowGroup.contentWidth + 10,
+	        default = "assets/link.png",
+	        width = 24, height = 24,
+	        --onRelease = delRow
+	    }
+	    row.linkButton.alpha = 0
+	    
+	    if listRecsDetailQuote[idx].showLink == true then
+	    	row.linkButton.alpha = 1
+	    	row.textObj.xOrigin = row.textObj.xOrigin + 24
+	    	row.textObj2.xOrigin = row.textObj2.xOrigin + 24
+	    end
+
 		
 		rowGroup:insert(row.delButton)
+		rowGroup:insert(row.linkButton)
 		rowGroup:insert(row.textObj)
 		rowGroup:insert(row.textObj2)
 		
@@ -131,7 +206,7 @@ local function showRecords()
 		if phase == "press" then
 			print( "Pressed row: " .. row.index )
 			print( "\n " .. listRecsDetailQuote[row.index].listprice ) 
-			background:setFillColor( 196, 255, 156, 255 )
+			background:setFillColor(67,141,241,180)
 			
 		elseif phase == "release" or phase == "tap" then
 			print( "Tapped and/or Released row: " .. row.index )
@@ -145,13 +220,19 @@ local function showRecords()
 		elseif phase == "swipeLeft" then
 			print( "Swiped Left row: " .. row.index )
 			listRecsDetailQuote[row.index].showDel = true
+			listRecsDetailQuote[row.index].showLink = true
+			markLinkedBundle(event)
 			row.reRender = true
 			    
     	elseif phase == "swipeRight" then
 			print( "Swiped Right row: " .. row.index )
 			listRecsDetailQuote[row.index].showDel = false
+			listRecsDetailQuote[row.index].showLink = false
+			row.textObj.xOrigin = row.textObj.xOrigin - 24
+	    	row.textObj2.xOrigin = row.textObj2.xOrigin - 24
+	    	display.remove( row.linkButton )
 			display.remove( row.delButton )
-			
+			unmarkLinkedBundle(event)
 		end
 		
 		
@@ -232,17 +313,20 @@ function scene:createScene( event )
 	-- local t = createGrid( design, data )
 	-- t.x, t.y = 30, 150
 --	print( "\n1: starting detail list loading  Quote  event")
-	local bg = display.newImageRect( "assets/EskoStripeBG5.png", 360, 570 )
+	local bg = display.newImageRect( deviceSwitch.welcomeSplash, deviceSwitch.masterScreenWidth, deviceSwitch.masterScreenHeight)
+--	local bg = display.newImageRect( deviceSwitch.globalBackgroundImage, 360, 570 )
 	bg.x = display.contentWidth / 2
 	bg.y = display.contentHeight / 2 + display.statusBarHeight
 	list = widget.newTableView {
-		top = top + 40,
-		height = 404,
-		maskFile = "mask404.png"
+--		top = top + 40,
+		top = deviceSwitch.listViewTop,
+		height = 804,
+--		height = device.contentHeight - 200,
+--		maskFile = "mask404.png"
 	}
 	screenGroup:insert(bg)
 	screenGroup:insert(list)
-	
+
 	print( "\n1: inserted detailed bg and list, createScene Quote  event")
 	
 	loadData()
@@ -251,12 +335,14 @@ function scene:createScene( event )
 	--Setup the price bar 
 	print( "starting priceBar" )
 	priceBar = ui.newButton{
-		default = "assets/navBar.png",
+--		default = "assets/navBar@2.png",
+		default = deviceSwitch.navBar,
 		onRelease = scrollToTop
 	}
 	priceBar.x = display.contentWidth*.5
 	--print ("priceBar coords: " ..display.contentWidth*.5 .."," ..display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
-	priceBar.y = math.floor(display.screenOriginY + display.statusBarHeight + 19) --navBar.height*0.5)
+--	priceBar.y = math.floor(display.screenOriginY + display.statusBarHeight + 19) --navBar.height*0.5)
+	priceBar.y = deviceSwitch.priceBarYloc
 	resetMachinePrice()
 	priceHeader = display.newText("Price: $" ..string.format("%i",MachinePrice), 0, 0, native.systemFontBold, 16)
 	priceHeader:setTextColor(255, 255, 255)
@@ -296,6 +382,23 @@ function scene:createScene( event )
 	print( "\n1: created Scene Quote  event")
 end
 
+--*** iPad: The lines below are some layout tweaks for the larger display size ***
+--if system.getInfo("model") == "iPad" then	
+--	Rather than creating a new graphic, let's just stretch the black bar at the top of the screen
+--	priceBar.xScale = 6  
+--
+--	Set new default text since the list is now on the left
+--	detailScreenText.text = "Tap an item on the left" 
+--
+--	Change the width and x position of the detail screen
+--	detailBg.width = display.contentWidth - myList.width
+--	detailScreen.x = myList.x + myList.width*0.5 + 1
+--
+--	Insert the selected color fill one level before the last item (which was the background inserted above)
+--	list:insert(2,selected)
+--	Adjust the x position of the selected color fill
+--	selected.x = list.x + list.width*0.5
+--end
 
 -- Called immediately after scene has moved onscreen:
 function scene:enterScene( event )

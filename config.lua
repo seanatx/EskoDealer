@@ -3,9 +3,9 @@ if string.sub(system.getInfo("model"),1,4) == "iPad" then
     {
         content =
         {
-            width = 360,
-            height = 480,
-            scale = "letterBox",
+            width = 768,
+            height = 1024,
+            scale = "none",
             xAlign = "center",
             yAlign = "center",
             imageSuffix = 
@@ -25,14 +25,14 @@ if string.sub(system.getInfo("model"),1,4) == "iPad" then
     }
 
 elseif string.sub(system.getInfo("model"),1,2) == "iP" and display.pixelHeight > 960 then
-	print("iPhone5 configuration detected")
+	print("iPhone5 configuration detected " ..system.getInfo("model"))
     application = 
     {
         content =
         {
             width = 320, 
             height = 568,
-            scale = "letterBox",
+            scale = "zoomEven", 
             xAlign = "center",
             yAlign = "center",
             imageSuffix = 

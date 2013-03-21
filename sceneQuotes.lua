@@ -153,7 +153,7 @@ local function showRecords()
 		
 		if phase == "press" then
 			print( "Pressed row: " .. row.index )
-			background:setFillColor( 196, 255, 156, 255 )
+			background:setFillColor(67,141,241,180)
 			
 		elseif phase == "release" or phase == "tap" then
 			print( "Tapped and/or Released row: " .. row.index )
@@ -164,16 +164,16 @@ local function showRecords()
 			storyboard.gotoScene( "sceneQuoteDetail", {effect="fade", params={nameToGet=nm, database=db}} )
 			-- go to new scene
 			
-		elseif phase == "swipeLeft" then
-			print( "Swiped Left row: " .. row.index )
-			listRecsQuoteMain[row.index].showDel = true
-			row.reRender = true
+--		elseif phase == "swipeLeft" then
+--			print( "Swiped Left row: " .. row.index )
+--			listRecsQuoteMain[row.index].showDel = true
+--			row.reRender = true
 			    
-    	elseif phase == "swipeRight" then
-			print( "Swiped Right row: " .. row.index )
-			listRecsQuoteMain[row.index].showDel = false
-			display.remove( row.delButton )
-			
+--    	elseif phase == "swipeRight" then
+--			print( "Swiped Right row: " .. row.index )
+--			listRecsQuoteMain[row.index].showDel = false
+--			display.remove( row.delButton )
+--			
 		end
 		
 		
@@ -229,9 +229,9 @@ function scene:createScene( event )
 
 	db = setUpDatabase("EskoData.sqlite")
 
-	local bg = display.newImageRect( "assets/EskoStripeBG5.png", display.contentWidth, display.contentHeight - top )
+	local bg = display.newImageRect( deviceSwitch.welcomeSplash, deviceSwitch.masterScreenWidth, deviceSwitch.masterScreenHeight)
 	bg.x = display.contentWidth / 2
-	bg.y = display.contentHeight / 2 + display.statusBarHeight
+	bg.y = display.contentHeight / 2 --+ display.statusBarHeight
 	
 	local topBoundary = display.screenOriginY + 60
 	local bottomBoundary = display.screenOriginY -290
@@ -242,7 +242,8 @@ function scene:createScene( event )
 		top = topBoundary,
 		bottom = bottomBoundary,
 		--maskFile = "mask454.png",
-		width = 304
+--		width = 304
+		width = 404
 --		height = 504
 	}
 	list.x = 8
@@ -306,6 +307,7 @@ function scene:destroyScene( event )
 	print( "((destroying scene Quote's view))" )
 	
 end
+
 
 ---------------------------------------------------------------------------------
 -- END OF YOUR IMPLEMENTATION

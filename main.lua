@@ -1,5 +1,5 @@
 
-
+local appswitch = require( "appSwitch" )
 local widget = require ( "widget" )
 local storyboard = require ( "storyboard" )
 --widget.setTheme( "theme_ios" )
@@ -30,9 +30,11 @@ _G.EskoData = nil
 
 --Create a tab-bar and place it at the bottom of the screen
 local demoTabs = widget.newTabBar{
-	top = display.contentHeight - 50 - display.screenOriginY,
+--	top = display.contentHeight - display.statusBarHeight - 50,
 	buttons = bgrp.tabButtons
 }
+demoTabs.x = deviceSwitch.demoTabsXloc
+demoTabs.y = deviceSwitch.demoTabsYloc
 
 -- load first scene
 storyboard.gotoScene( "sceneSplash", "fade", 400 )  

@@ -18,12 +18,20 @@ local storyboard = require ( "storyboard" )
 -----------------------------------------------------------------------------------------
  
 tabButtons = {
+--	{
+--		label = "ArtiosCAD",
+--		default = "assets/tabIcon.png",
+--		down = "assets/tabIcon-down.png",
+--		width = 32, height = 32,
+--		onPress=function() storyboard.gotoScene( "sceneArtiosCAD" ); end,
+--		selected = true
+--	},
 	{
-		label = "ArtiosCAD",
-		default = "assets/tabIcon.png",
-		down = "assets/tabIcon-down.png",
+		label = "Projects",
+		default = "assets/tabIconProjects.png",
+		down = "assets/tabIconProjects-down.png",
 		width = 32, height = 32,
-		onPress=function() storyboard.gotoScene( "sceneArtiosCAD" ); end,
+		onPress=function() storyboard.gotoScene( "sceneProjects" ); end,
 		selected = true
 	},
 	{
