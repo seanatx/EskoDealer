@@ -17,7 +17,7 @@ local nameOfQuoteToGet
 local image
 local top = display.statusBarHeight*2
 local listRecsDetailQuote = {}
-local list = nil
+local listMaster = nil
 local db
 local showDetails
 local screenGroup
@@ -61,7 +61,6 @@ local function loadData()
 --	print( "finsihed loading detail data" )
 end
 
-
 local function resetMachinePrice()
 	MachinePrice = 0
 	for x = 1, #listRecsDetailQuote do
@@ -71,69 +70,124 @@ local function resetMachinePrice()
 --	priceHeader.text = "" .. MachinePrice
 end
 
-
-local function markLinkedBundle(event)
+local function markLinkedBundle(event, mark)
 	local index = event.row.index
 	local mstr = listRecsDetailQuote[index].master
+	local subd = listRecsDetailQuote[index].subordinate
 	local subslist = {}
-	if mstr ~= "" then -- we have a subordinate, find the master, then process subs list
-		for x = 1, #listRecsDetailQuote do
-			if listRecsDetailQuote[x].productcode == mstr then
-				-- set the master delete and link buttons "on"
-				listRecsDetailQuote[x].showDel = true
-				listRecsDetailQuote[x].showLink = true
-				-- set the delBtn back to off since this is a subordinate
-				listRecsDetailQuote[index].showDel = false
-				event.parent.content.rows[x].reRender = true
-				--- now do a subordinate discovery
-				subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
-			end
-		end 
+	print ( "Master value: " .. mstr .. ", Subordinate value: " .. subd )
+	if (mstr == "" and subd == "" ) then
+			listRecsDetailQuote[index].showDel = mark
+			event.parent.content.rows[index].reRender = true	
 	else
-		-- we have a master, get sub list and process
-		subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
-	end 
-	for k, v in pairs (subslist) do
-		for x = 1, #listRecsDetailQuote do
-			if listRecsDetailQuote[x].productcode == v then
-				--event.row.showDel = true
-				listRecsDetailQuote[x].showLink = true
-				event.parent.content.rows[x].reRender = true
+		if mstr ~= "" then -- we have a subordinate, find the master, then process subs list
+			for x = 1, #listRecsDetailQuote do
+				if listRecsDetailQuote[x].productcode == mstr then
+					-- set the master delete and link buttons "on"
+					listRecsDetailQuote[x].showDel = mark --true
+					listRecsDetailQuote[x].showLink = mark --true
+					-- set the delBtn back to off since this is a subordinate
+--					listRecsDetailQuote[index].showDel = not(mark) --false
+					event.parent.content.rows[x].reRender = true
+					--- now do a subordinate discovery
+					subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
+				end
 			end 
+		else
+			-- we have a bundle master, get sub list and process
+			listRecsDetailQuote[index].showDel = mark
+			listRecsDetailQuote[index].showLink = mark
+
+			subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
 		end 
-	end
+		for k, v in pairs (subslist) do
+			for x = 1, #listRecsDetailQuote do
+				if listRecsDetailQuote[x].productcode == v then
+					--event.row.showDel = true
+					listRecsDetailQuote[x].showLink = mark --true
+					event.parent.content.rows[x].reRender = true
+				end 
+			end 
+		end
+	end -- end single item if
 end
 	
-local function unmarkLinkedBundle(event)
-	local index = event.row.index
-	local mstr = listRecsDetailQuote[index].master
-	local subslist = {}
-	if mstr ~= "" then -- we have a subordinate, find the master, then process subs list
-		for x = 1, #listRecsDetailQuote do
-			if listRecsDetailQuote[x].productcode == mstr then
-				-- set the master delete and link buttons "on"
-				listRecsDetailQuote[x].showDel = false
-				listRecsDetailQuote[x].showLink = false
-				event.parent.content.rows[x].reRender = true
-				--- now do a subordinate discovery
-				subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
-			end
-		end 
-	else
-		-- we have a master, get sub list and process
-		subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
+--local function unmarkLinkedBundle(event)
+--	local index = event.row.index
+--	local mstr = listRecsDetailQuote[index].master
+--	local subslist = {}
+--	if mstr ~= "" then -- we have a subordinate, find the master, then process subs list
+--		for x = 1, #listRecsDetailQuote do
+--			if listRecsDetailQuote[x].productcode == mstr then
+--				-- set the master delete and link buttons "off"
+--				listRecsDetailQuote[x].showDel = false
+--				listRecsDetailQuote[x].showLink = false
+--				event.parent.content.rows[x].reRender = true
+--				--- now do a subordinate discovery
+--				subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
+--			end
+--		end 
+--	else
+--		-- we have a master, get sub list and process
+--		subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
+--	end   
+--	for k, v in pairs (subslist) do
+--		for x = 1, #listRecsDetailQuote do
+--			if listRecsDetailQuote[x].productcode == v then
+--				local r = event.parent.content.rows
+--				listRecsDetailQuote[x].showLink = false
+--				r[x].reRender = true
+--			end
+--		end
+--	end
+--end	
 
-	end   
-	for k, v in pairs (subslist) do
-		for x = 1, #listRecsDetailQuote do
-			if listRecsDetailQuote[x].productcode == v then
-				local r = event.parent.content.rows
-				listRecsDetailQuote[x].showLink = false
-				r[x].reRender = true
-			end
+local function deleteBundle(event, list)
+-- old delete row
+	print( " in del bundle " )
+			print("Delete hit: " .. tostring(event.target.id))
+--			local dbid = listRecsDetailQuote[event.target.id].id
+--			list:deleteRow(event.target.id)
+--			table.remove(listRecsDetailQuote, event.target.id)
+--			display.remove( detailGrp )
+--			resetMachinePrice()
+--			priceHeader.text = "Price: $" .. MachinePrice
+			-- delete from database
+			-- deleteData(dbid)
+			
+	local index = event.target.id
+	local mstr = listRecsDetailQuote[index].master
+	local subd = listRecsDetailQuote[index].subordinate
+	local subslist = {}
+--	if (mstr == "" and subd == "" ) then
+--			listMaster:deleteRow(index)
+--			table.remove(listRecsDetailQuote, index)	
+--	else
+--	if subd ~= "" then
+--		if mstr ~= "" then -- we have a subordinate, find the master, then process subs list
+--			for x = 1, #listRecsDetailQuote do
+--				if listRecsDetailQuote[x].productcode == mstr then
+--					subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
+--				end
+--			end
+--			print("This should never happen - how did we get a sub in here!!!!!!!!")
+--		else
+	if subd ~= "" then
+		subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
+		for k, v in pairs (subslist) do
+			for x = 1, #listRecsDetailQuote-1 do
+				if listRecsDetailQuote[x].productcode == v then
+					listMaster:deleteRow(x)
+					table.remove(listRecsDetailQuote, x)
+				end 
+			end 
 		end
-	end
-end	
+	end -- end subordinate deletions
+	listMaster:deleteRow(index)
+	table.remove(listRecsDetailQuote, index)
+	resetMachinePrice()
+	priceHeader.text = "Price: $" .. MachinePrice
+end
 			
 local function showRecords()
 	local function onRowRender( event )
@@ -158,10 +212,11 @@ local function showRecords()
 		
 		--MachinePrice = MachinePrice + listRecsDetailQuote[idx].listprice
 					
-		local function delRow( event )
+		local function delRow( event, list )
 			print( " in del row " )
 			print("Delete hit: " .. tostring(event.target.id))
-			local dbid = listRecsDetailQuote[event.target.id].id
+			deleteBundle(event)
+--			local dbid = listRecsDetailQuote[event.target.id].id
 			
 
 --			list:deleteRow(event.target.id)
@@ -203,10 +258,6 @@ local function showRecords()
 	    	row.linkButton.alpha = 1
 	    	row.textObj.xOrigin = row.textObj.xOrigin + 24
 	    	row.textObj2.xOrigin = row.textObj2.xOrigin + 24
-	    else
---	    	row.linkButton.alpha = 0
---	    	row.textObj.xOrigin = row.textObj.xOrigin - 24
---	    	row.textObj2.xOrigin = row.textObj2.xOrigin - 24
 	    end
 
 		
@@ -239,20 +290,21 @@ local function showRecords()
 			
 		elseif phase == "swipeLeft" then
 			print( "Swiped Left row: " .. row.index )
-			listRecsDetailQuote[row.index].showDel = true
-			listRecsDetailQuote[row.index].showLink = true
-			markLinkedBundle(event)
+--			listRecsDetailQuote[row.index].showDel = true
+--			listRecsDetailQuote[row.index].showLink = true
+			markLinkedBundle(event, true)
 			row.reRender = true
 			    
     	elseif phase == "swipeRight" then
 			print( "Swiped Right row: " .. row.index )
-			listRecsDetailQuote[row.index].showDel = false
-			listRecsDetailQuote[row.index].showLink = false
-			row.textObj.xOrigin = row.textObj.xOrigin - 24
-	    	row.textObj2.xOrigin = row.textObj2.xOrigin - 24
-	    	display.remove( row.linkButton )
-			display.remove( row.delButton )
-			unmarkLinkedBundle(event)
+--			listRecsDetailQuote[row.index].showDel = false
+--			listRecsDetailQuote[row.index].showLink = false
+--			row.textObj.xOrigin = row.textObj.xOrigin - 24
+--	    	row.textObj2.xOrigin = row.textObj2.xOrigin - 24
+--	    	display.remove( row.linkButton )
+--			display.remove( row.delButton )
+			markLinkedBundle(event, false)
+			row.reRender = true
 		end
 		
 		
@@ -344,6 +396,7 @@ function scene:createScene( event )
 --		height = device.contentHeight - 200,
 --		maskFile = "mask404.png"
 	}
+	listMaster = list
 	screenGroup:insert(bg)
 	screenGroup:insert(list)
 
