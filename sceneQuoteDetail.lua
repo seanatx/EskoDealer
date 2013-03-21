@@ -73,50 +73,66 @@ end
 
 
 local function markLinkedBundle(event)
---	print( "entering MS test")
 	local index = event.row.index
 	local mstr = listRecsDetailQuote[index].master
---	print( mstr )
+	local subslist = {}
 	if mstr ~= "" then -- we have a subordinate, find the master, then process subs list
-		local mstrProdCode = listRecsDetailQuote[index].master
 		for x = 1, #listRecsDetailQuote do
-			if listRecsDetailQuote[x].productcode == mstrProdCode then
+			if listRecsDetailQuote[x].productcode == mstr then
+				-- set the master delete and link buttons "on"
+				listRecsDetailQuote[x].showDel = true
+				listRecsDetailQuote[x].showLink = true
+				-- set the delBtn back to off since this is a subordinate
+				listRecsDetailQuote[index].showDel = false
+				event.parent.content.rows[x].reRender = true
 				--- now do a subordinate discovery
-				local subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
-			end -- end if
-		end -- end forloop
+				subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
+			end
+		end 
 	else
---	if mstr == "" then  -- we have a master, get sub list and process
-		local subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
-		for k, v in pairs (subslist) do
-			for x = 1, #listRecsDetailQuote do
-				if listRecsDetailQuote[x].productcode == v then
-					--event.row.showDel = true
-					listRecsDetailQuote[x].showLink = true
-					event.parent.content.rows[x].reRender = true
-				end -- end if
-			end -- end forloop
-		end -- end for loop
-	end -- end ifelse
+		-- we have a master, get sub list and process
+		subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
+	end 
+	for k, v in pairs (subslist) do
+		for x = 1, #listRecsDetailQuote do
+			if listRecsDetailQuote[x].productcode == v then
+				--event.row.showDel = true
+				listRecsDetailQuote[x].showLink = true
+				event.parent.content.rows[x].reRender = true
+			end 
+		end 
+	end
 end
 	
 local function unmarkLinkedBundle(event)
 	local index = event.row.index
 	local mstr = listRecsDetailQuote[index].master
-	if mstr == "" then  -- we have a sub list
-		local subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
-		for k, v in pairs (subslist) do
-			for x = 1, #listRecsDetailQuote do
-				if listRecsDetailQuote[x].productcode == v then
-					local r = event.parent.content.rows
-					listRecsDetailQuote[x].showLink = false
-					r[x].reRender = true
-				end
+	local subslist = {}
+	if mstr ~= "" then -- we have a subordinate, find the master, then process subs list
+		for x = 1, #listRecsDetailQuote do
+			if listRecsDetailQuote[x].productcode == mstr then
+				-- set the master delete and link buttons "on"
+				listRecsDetailQuote[x].showDel = false
+				listRecsDetailQuote[x].showLink = false
+				event.parent.content.rows[x].reRender = true
+				--- now do a subordinate discovery
+				subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
+			end
+		end 
+	else
+		-- we have a master, get sub list and process
+		subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
+
+	end   
+	for k, v in pairs (subslist) do
+		for x = 1, #listRecsDetailQuote do
+			if listRecsDetailQuote[x].productcode == v then
+				local r = event.parent.content.rows
+				listRecsDetailQuote[x].showLink = false
+				r[x].reRender = true
 			end
 		end
-	else
-	-- look to subordiantes for a master
-	end   
+	end
 end	
 			
 local function showRecords()
@@ -187,6 +203,10 @@ local function showRecords()
 	    	row.linkButton.alpha = 1
 	    	row.textObj.xOrigin = row.textObj.xOrigin + 24
 	    	row.textObj2.xOrigin = row.textObj2.xOrigin + 24
+	    else
+--	    	row.linkButton.alpha = 0
+--	    	row.textObj.xOrigin = row.textObj.xOrigin - 24
+--	    	row.textObj2.xOrigin = row.textObj2.xOrigin - 24
 	    end
 
 		
