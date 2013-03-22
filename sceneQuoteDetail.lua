@@ -70,6 +70,10 @@ local function resetMachinePrice()
 --	priceHeader.text = "" .. MachinePrice
 end
 
+-- the assumption is that each DB table items contains 2 fields; Master, Subordinate
+-- neither field value can be null/nil or Lua will freak out
+-- So far, single tier logic; Master items should not have a Master value, Subordinates same
+-- Further logic would need to be implimented to support Subs in mor ethan one Master
 local function markLinkedBundle(event, mark)
 	local index = event.row.index
 	local mstr = listRecsDetailQuote[index].master
@@ -110,68 +114,20 @@ local function markLinkedBundle(event, mark)
 			end 
 		end
 	end -- end single item if
-end
-	
---local function unmarkLinkedBundle(event)
---	local index = event.row.index
---	local mstr = listRecsDetailQuote[index].master
---	local subslist = {}
---	if mstr ~= "" then -- we have a subordinate, find the master, then process subs list
---		for x = 1, #listRecsDetailQuote do
---			if listRecsDetailQuote[x].productcode == mstr then
---				-- set the master delete and link buttons "off"
---				listRecsDetailQuote[x].showDel = false
---				listRecsDetailQuote[x].showLink = false
---				event.parent.content.rows[x].reRender = true
---				--- now do a subordinate discovery
---				subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
---			end
---		end 
---	else
---		-- we have a master, get sub list and process
---		subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
---	end   
---	for k, v in pairs (subslist) do
---		for x = 1, #listRecsDetailQuote do
---			if listRecsDetailQuote[x].productcode == v then
---				local r = event.parent.content.rows
---				listRecsDetailQuote[x].showLink = false
---				r[x].reRender = true
---			end
---		end
---	end
---end	
+end	
 
 local function deleteBundle(event, list)
--- old delete row
+	-- old delete row
 	print( " in del bundle " )
-			print("Delete hit: " .. tostring(event.target.id))
---			local dbid = listRecsDetailQuote[event.target.id].id
---			list:deleteRow(event.target.id)
---			table.remove(listRecsDetailQuote, event.target.id)
---			display.remove( detailGrp )
---			resetMachinePrice()
---			priceHeader.text = "Price: $" .. MachinePrice
-			-- delete from database
-			-- deleteData(dbid)
+	print("Delete hit: " .. tostring(event.target.id))
+	-- local dbid = listRecsDetailQuote[event.target.id].id
+	-- delete from database
+	-- deleteData(dbid)
 			
 	local index = event.target.id
 	local mstr = listRecsDetailQuote[index].master
 	local subd = listRecsDetailQuote[index].subordinate
 	local subslist = {}
---	if (mstr == "" and subd == "" ) then
---			listMaster:deleteRow(index)
---			table.remove(listRecsDetailQuote, index)	
---	else
---	if subd ~= "" then
---		if mstr ~= "" then -- we have a subordinate, find the master, then process subs list
---			for x = 1, #listRecsDetailQuote do
---				if listRecsDetailQuote[x].productcode == mstr then
---					subslist = strutils:split( listRecsDetailQuote[x].subordinate, "," )
---				end
---			end
---			print("This should never happen - how did we get a sub in here!!!!!!!!")
---		else
 	if subd ~= "" then
 		subslist = strutils:split( listRecsDetailQuote[index].subordinate, "," )
 		for k, v in pairs (subslist) do
@@ -197,42 +153,26 @@ local function showRecords()
 		local color = 0
 		
 --		print( " in on row render description" )
-		row.textObj = display.newRetinaText( listRecsDetailQuote[idx].description, 0, 0, "Helvetica", 12 )
+		row.textObj = display.newRetinaText( listRecsDetailQuote[idx].description, 0, 0, "Helvetica", deviceSwitch.listRowTextSize1 )
 		row.textObj:setTextColor( color )
 		row.textObj:setReferencePoint( display.CenterLeftReferencePoint )
 		row.textObj.x = 20
 		row.textObj.y = rowGroup.contentHeight * 0.35
 		
 --		print( " in on row render prod code" )
-		row.textObj2 = display.newRetinaText( listRecsDetailQuote[idx].productcode, 0, 0, "Helvetica", 9 )
+		row.textObj2 = display.newRetinaText( listRecsDetailQuote[idx].productcode, 0, 0, "Helvetica", deviceSwitch.listRowTextSize2 )
 		row.textObj2:setTextColor( color )
 		row.textObj2:setReferencePoint( display.CenterLeftReferencePoint )
 		row.textObj2.x = 20
 		row.textObj2.y = rowGroup.contentHeight * 0.65
-		
-		--MachinePrice = MachinePrice + listRecsDetailQuote[idx].listprice
 					
 		local function delRow( event, list )
-			print( " in del row " )
-			print("Delete hit: " .. tostring(event.target.id))
 			deleteBundle(event)
---			local dbid = listRecsDetailQuote[event.target.id].id
-			
-
---			list:deleteRow(event.target.id)
---			table.remove(listRecsDetailQuote, event.target.id)
---			display.remove( detailGrp )
---			resetMachinePrice()
---			priceHeader.text = "Price: $" .. MachinePrice
-			-- delete from database
-			-- deleteData(dbid)
-			------------  etend to make a new table from user data and be able to reload -------------
 		end
 		
---		print( " in del button" )
 		row.delButton = widget.newButton{
 	        id = row.index,
-	        top = rowGroup.contentHeight * 0.05,
+	        top = rowGroup.contentHeight * deviceSwitch.rowDelButtonAdjustY,
 	        left = rowGroup.contentWidth - 80,
 	        default = "deletebtn.png",
 	        width = 64, height = 33,
@@ -243,10 +183,9 @@ local function showRecords()
 	    	row.delButton.alpha = 1
 	    end
 	    	    
-	    --		print( " in del button" )
 		row.linkButton = widget.newButton{
 	        id = row.index,
-	        top = rowGroup.contentHeight * 0.1,
+	        top = rowGroup.contentHeight * deviceSwitch.rowLinkButtonAdjustY,
 	        left = rowGroup.contentWidth - rowGroup.contentWidth + 10,
 	        default = "assets/link.png",
 	        width = 24, height = 24,
@@ -259,7 +198,6 @@ local function showRecords()
 	    	row.textObj.xOrigin = row.textObj.xOrigin + 24
 	    	row.textObj2.xOrigin = row.textObj2.xOrigin + 24
 	    end
-
 		
 		rowGroup:insert(row.delButton)
 		rowGroup:insert(row.linkButton)
@@ -281,39 +219,25 @@ local function showRecords()
 			
 		elseif phase == "release" or phase == "tap" then
 			print( "Tapped and/or Released row: " .. row.index )
-			--background:setFillColor( 196, 255, 156, 255 )
 			row.reRender = true
-			
---			_G.currIdx = row.index
 --			storyboard.showOverlay( "storyboard-details", { effect="fade", params={lr = listRecsDetailQuote}, isModal=true } )
 --			-- go to new scene
 			
 		elseif phase == "swipeLeft" then
-			print( "Swiped Left row: " .. row.index )
---			listRecsDetailQuote[row.index].showDel = true
---			listRecsDetailQuote[row.index].showLink = true
+--			print( "Swiped Left row: " .. row.index )
 			markLinkedBundle(event, true)
 			row.reRender = true
 			    
     	elseif phase == "swipeRight" then
-			print( "Swiped Right row: " .. row.index )
---			listRecsDetailQuote[row.index].showDel = false
---			listRecsDetailQuote[row.index].showLink = false
---			row.textObj.xOrigin = row.textObj.xOrigin - 24
---	    	row.textObj2.xOrigin = row.textObj2.xOrigin - 24
---	    	display.remove( row.linkButton )
---			display.remove( row.delButton )
+--			print( "Swiped Right row: " .. row.index )
 			markLinkedBundle(event, false)
 			row.reRender = true
 		end
-		
-		
 	end -- rowListener
-	
 
 	for x = 1, #listRecsDetailQuote do
 		list:insertRow {
-			height = 40,
+			height = 60,
 			onRender = onRowRender,
 			listener = rowListener
 		}
@@ -324,15 +248,11 @@ end -- showRecords
 
 
 local function backBtnRelease( event )
-	print("back button released")
-	--transition.to(myList, {time=400, x=0, transition=easing.outExpo })
-	--transition.to(sceneQuotes, {time=400, x=display.contentWidth, transition=easing.outExpo })
-	--transition.to(backBtn, {time=400, x=math.floor(backBtn.width/2)+backBtn.width, transition=easing.outExpo })
+--	print("back button released")
 	transition.to(priceBar, {time=100, alpha=0})
 	transition.to(priceHeader, {time=00, alpha=0})
 	transition.to(backBtn, {time=100, alpha=0 })
 	storyboard.gotoScene( "sceneQuotes", "fade", 400 ) 
-
 	--delta, velocity = 0, 0
 end
 
@@ -348,7 +268,6 @@ end
 function scene:createScene( event )
 	print( "\n1: entering detail Quote create event")
 	screenGroup = self.view
---	listRecsDetailQuote = event.params.lr
 	nameOfQuoteToGet = event.params.nameToGet
 	db = event.params.database
 	--image = display.newImageRect( "assets/Default-568h@2x.png", 360, 570 )

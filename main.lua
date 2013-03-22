@@ -7,7 +7,7 @@ local bgrp = require("BgdGroup")
 _G.debug = false
 _G.destroyDB = true 
 _G.EskoData = nil
-
+ 
 -- Background Width/Height/Alignment
 
 --iPhone
@@ -30,9 +30,11 @@ _G.EskoData = nil
 
 --Create a tab-bar and place it at the bottom of the screen
 local demoTabs = widget.newTabBar{
---	top = display.contentHeight - display.statusBarHeight - 50,
+	top = display.contentHeight - display.statusBarHeight - 50,
 	buttons = bgrp.tabButtons
 }
+demoTabs.height = deviceSwitch.demoTabBarHeight
+demoTabs.width = deviceSwitch.demoTabBarWidth
 demoTabs.x = deviceSwitch.demoTabsXloc
 demoTabs.y = deviceSwitch.demoTabsYloc
 

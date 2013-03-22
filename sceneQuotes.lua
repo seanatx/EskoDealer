@@ -182,7 +182,7 @@ local function showRecords()
 
 	for x = 1, #listRecsQuoteMain do
 		list:insertRow {
-			height = 100,
+			height = deviceSwitch.listUnitsRowHeight,
 			onRender = onRowRender,
 			listener = rowListener
 		}
@@ -250,9 +250,43 @@ function scene:createScene( event )
 --	list.y = 5
 --	list.maskFile.x - 15
 --	list.maskFile = "mask404.png"
+		-- create embossed text to go on toolbar
+	local sbHeight = display.statusBarHeight
+	local tbHeight = 44
+	local top = sbHeight + tbHeight
+
+	-- create a gradient for the top-half of the toolbar
+	local toolbarGradient = graphics.newGradient( {168, 181, 198, 255 }, {139, 157, 180, 255}, "down" )
+
+	local titleBar = widget.newTabBar{
+		top = sbHeight,
+		gradient = toolbarGradient,
+		bottomFill = { 117, 139, 168, 255 },
+		height = 44
+
+
+	}
+
+	local titleText = display.newEmbossedText( "Machine Selection", 0, 0, native.systemFontBold, 20 )
+	titleText:setReferencePoint( display.CenterReferencePoint )
+	titleText:setTextColor( 255 )
+	titleText.x = titleBar.width/2
+	titleText.y = titleBar.y
+
+	-- create a shadow underneath the titlebar (for a nice touch)
+	local shadow = display.newImage( "assets/shadow.png" )
+	shadow:setReferencePoint( display.TopLeftReferencePoint )
+	shadow.x, shadow.y = 0, top
+	shadow.xScale = 320 / shadow.contentWidth
+	shadow.alpha = 0.45
+
 	
 	screenGroup:insert(bg)
-	screenGroup:insert(list) 
+	screenGroup:insert(list)
+	screenGroup:insert(shadow) 
+	screenGroup:insert(titleBar) 
+	screenGroup:insert(titleText) 
+ 
 	
 --	print( "\n1: inserted bg and list, createScene Quote  event")
 

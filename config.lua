@@ -32,7 +32,7 @@ elseif string.sub(system.getInfo("model"),1,2) == "iP" and display.pixelHeight >
         {
             width = 320, 
             height = 568,
-            scale = "zoomEven", 
+            scale = "none", 
             xAlign = "center",
             yAlign = "center",
             imageSuffix = 
