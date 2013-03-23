@@ -3,14 +3,21 @@
 -- sceneQuote.lua
 --
 ---------------------------------------------------------------------------------
-
+--local appswitch = require("AppSwitch")
 local storyboard = require( "storyboard" )
 local scene = storyboard.newScene()
 --local grid = require( "grid" ) 
 local widget = require("widget")
 require "sqlite3"
-local image
+local database = require( "DataBase" )
 local db
+local top = display.statusBarHeight*2
+local listRecsQuoteMain = {}
+--listRecsQuoteMain = database:loadDataIntoTable(listRecsQuoteMain, "select * from MachineQuotes")
+local list = nil
+local showDetails
+local image
+
 ---------------------------------------------------------------------------------
 -- 
 ---------------------------------------------------------------------------------
@@ -24,61 +31,8 @@ local function onSceneTouch( self, event )
 		return true
 	end
 end
-
-local top = display.statusBarHeight*2
-local listRecsQuoteMain = {}
-local list = nil
-local showDetails
-
-local function setUpDatabase(dbName)
-	
-	local path = system.pathForFile( dbName, system.DocumentsDirectory )
-	
-	-- check global if we are working and building the DB it persists so we have to destroy it
-	if (_G.destroyDB) then
-		print("\n destroyed the cached DB: " .. path)
-		os.remove(path)
-	end
-	
-	local file = io.open( path, "r" )
  
-	if ( file == nil ) then
-		-- copy the database file if doesn't exist
-		local pathSource     = system.pathForFile( dbName, system.ResourceDirectory )
-		local fileSource     = io.open( pathSource, "r" )
-		local contentsSource = fileSource:read( "*a" )
-                
-		local pathDest = system.pathForFile( dbName, system.DocumentsDirectory )
-		local fileDest = io.open( pathDest, "w" )
-		fileDest:write( contentsSource )
-            
-		io.close( fileSource )
-		io.close( fileDest )
-	end
 
-	local EskoDB = system.pathForFile(dbName, system.DocumentsDirectory)
-	local dbNew = sqlite3.open( EskoDB )
-	db = dbNew
-	
-	return dbNew
-
-end
-
-local function loadData()
-	local sql = "select * from projects"
-	
-	for a in db:nrows(sql) do
-		listRecsQuoteMain[#listRecsQuoteMain+1] =
-		{
-		id = a.id,
-		name = a.name,
-		category = a.category,
-		rating = a.rating,
-		thumbnail = a.thumb,
-		--print ( "from DB: " ..a.thumb)
-		}
-	end
-end
 
 local function showRecords()
 	
@@ -182,7 +136,7 @@ local function showRecords()
 
 	for x = 1, #listRecsQuoteMain do
 		list:insertRow {
-			height = deviceSwitch.listUnitsRowHeight,
+			height = 140,
 			onRender = onRowRender,
 			listener = rowListener
 		}
@@ -190,7 +144,56 @@ local function showRecords()
 	
 end -- showRecords
 
+	local bg = display.newImageRect("assets/Default@2.png", display.contentWidth, display.contentHeight )
+	bg.x = display.contentWidth / 2
+	bg.y = display.contentHeight / 2 --+ display.statusBarHeight
+	
+	local topBoundary = display.screenOriginY + 60
+	local bottomBoundary = display.screenOriginY -290
 
+	list = widget.newTableView {
+--		top = top + 10,
+--		height = 404,
+		top = topBoundary,
+		bottom = bottomBoundary,
+		--maskFile = "mask454.png",
+--		width = 304
+		width = 404
+--		height = 504
+	}
+	list.x = 1
+--	list.y = 5
+--	list.maskFile.x - 15
+--	list.maskFile = "mask404.png"
+		-- create embossed text to go on toolbar
+	local sbHeight = display.statusBarHeight
+	local tbHeight = 44
+	local top = sbHeight + tbHeight
+
+	-- create a gradient for the top-half of the toolbar
+	local toolbarGradient = graphics.newGradient( {168, 181, 198, 255 }, {139, 157, 180, 255}, "down" )
+
+	local titleBar = widget.newTabBar{
+		top = sbHeight,
+		gradient = toolbarGradient,
+		bottomFill = { 117, 139, 168, 255 },
+		height = 44
+
+
+	}
+
+	local titleText = display.newEmbossedText( "Machine Selection", 0, 0, native.systemFontBold, 20 )
+	titleText:setReferencePoint( display.CenterReferencePoint )
+	titleText:setTextColor( 255 )
+	titleText.x = titleBar.width/2
+	titleText.y = titleBar.y
+
+	-- create a shadow underneath the titlebar (for a nice touch)
+	local shadow = display.newImage( "assets/shadow.png" )
+	shadow:setReferencePoint( display.TopLeftReferencePoint )
+	shadow.x, shadow.y = 0, top
+	shadow.xScale = display.contentWidth / shadow.contentWidth
+	shadow.alpha = 0.45
 
 -- Called when the scene's view does not exist:
 function scene:createScene( event )
@@ -225,72 +228,15 @@ function scene:createScene( event )
 	-- next 2 lines draw a grid (see grid.lua )
 	-- local t = createGrid( design, data )
 	-- t.x, t.y = 30, 150
---	print( "\n1: starting list loading createScene Quote  event")
 
-	db = setUpDatabase("EskoData.sqlite")
-
-	local bg = display.newImageRect( deviceSwitch.welcomeSplash, deviceSwitch.masterScreenWidth, deviceSwitch.masterScreenHeight)
-	bg.x = display.contentWidth / 2
-	bg.y = display.contentHeight / 2 --+ display.statusBarHeight
-	
-	local topBoundary = display.screenOriginY + 60
-	local bottomBoundary = display.screenOriginY -290
-
-	list = widget.newTableView {
---		top = top + 10,
---		height = 404,
-		top = topBoundary,
-		bottom = bottomBoundary,
-		--maskFile = "mask454.png",
---		width = 304
-		width = 404
---		height = 504
-	}
-	list.x = 8
---	list.y = 5
---	list.maskFile.x - 15
---	list.maskFile = "mask404.png"
-		-- create embossed text to go on toolbar
-	local sbHeight = display.statusBarHeight
-	local tbHeight = 44
-	local top = sbHeight + tbHeight
-
-	-- create a gradient for the top-half of the toolbar
-	local toolbarGradient = graphics.newGradient( {168, 181, 198, 255 }, {139, 157, 180, 255}, "down" )
-
-	local titleBar = widget.newTabBar{
-		top = sbHeight,
-		gradient = toolbarGradient,
-		bottomFill = { 117, 139, 168, 255 },
-		height = 44
-
-
-	}
-
-	local titleText = display.newEmbossedText( "Machine Selection", 0, 0, native.systemFontBold, 20 )
-	titleText:setReferencePoint( display.CenterReferencePoint )
-	titleText:setTextColor( 255 )
-	titleText.x = titleBar.width/2
-	titleText.y = titleBar.y
-
-	-- create a shadow underneath the titlebar (for a nice touch)
-	local shadow = display.newImage( "assets/shadow.png" )
-	shadow:setReferencePoint( display.TopLeftReferencePoint )
-	shadow.x, shadow.y = 0, top
-	shadow.xScale = 320 / shadow.contentWidth
-	shadow.alpha = 0.45
-
-	
 	screenGroup:insert(bg)
 	screenGroup:insert(list)
 	screenGroup:insert(shadow) 
 	screenGroup:insert(titleBar) 
 	screenGroup:insert(titleText) 
- 
-	
---	print( "\n1: inserted bg and list, createScene Quote  event")
 
-	loadData()
+	db = database.db
+	listRecsQuoteMain = database:loadMachineDataIntoTable(listRecsQuoteMain, "select * from MachineQuotes")
 	showRecords()	
 	
 	---- create scene

@@ -25,9 +25,198 @@ local function onSceneTouch( self, event )
 	end
 end
 
+local sbHeight = display.statusBarHeight
+local tbHeight = 44
+local top = sbHeight + tbHeight
+
+-- create a gradient for the top-half of the toolbar
+local toolbarGradient = graphics.newGradient( {168, 181, 198, 255 }, {139, 157, 180, 255}, "down" )
+
+local titleBar = widget.newTabBar{
+	top = sbHeight,
+	gradient = toolbarGradient,
+	bottomFill = { 117, 139, 168, 255 },
+	height = 44
+}
+
+local titleText = display.newEmbossedText( "Project Selection", 0, 0, native.systemFontBold, 20 )
+titleText:setReferencePoint( display.CenterReferencePoint )
+titleText:setTextColor( 255 )
+titleText.x = titleBar.width/2
+titleText.y = titleBar.y
+
+-- create a shadow underneath the titlebar (for a nice touch)
+local shadow = display.newImage( "assets/shadow.png" )
+shadow:setReferencePoint( display.TopLeftReferencePoint )
+shadow.x, shadow.y = 0, top
+shadow.xScale = display.contentWidth / shadow.contentWidth
+shadow.alpha = 0.45
 local top = display.statusBarHeight*2
 local list = nil
 
+--Text to show which item we selected
+local itemSelected = display.newText( "You selected", 0, 0, native.systemFontBold, 24 )
+itemSelected:setTextColor( 0 )
+itemSelected.x = display.contentWidth + itemSelected.contentWidth * 0.5
+itemSelected.y = display.contentCenterY
+
+local topBoundary = display.screenOriginY + 60
+local bottomBoundary = display.screenOriginY -290
+
+list = widget.newTableView {
+	height = 864,
+	width = 768,
+	top = topBoundary,
+	bottom = bottomBoundary,
+	bottomPadding = 8,
+	--maskFile = "mask454.png",
+--	width = 304
+--	height = 504
+}
+list.x = 1
+list.y = titleBar.y + titleBar.contentHeight * 0.5
+
+--Forward reference for our back button
+local backButton
+
+--Items to show in our list
+local listItems = {
+	{ title = "A", items = {  } },
+	{ title = "B", items = {  } },
+	{ title = "C", items = {  } },
+	{ title = "D", items = {  } },
+	{ title = "E", items = { "BxampleA", "JxampleB","Example2","ExampleD" } },
+	{ title = "F", items = {  } },
+	{ title = "G", items = {  } },
+	{ title = "H", items = {  } },
+	{ title = "I", items = {  } },
+	{ title = "J", items = {  } },
+	{ title = "K", items = {  } },
+	{ title = "L", items = {  } },
+	{ title = "M", items = {  } },
+	{ title = "N", items = {  } },
+	{ title = "O", items = {  } },
+	{ title = "P", items = {  } },
+	{ title = "Q", items = {  } },
+	{ title = "R", items = {  } },
+	{ title = "S", items = {  } },
+	{ title = "T", items = {  } },
+	{ title = "U", items = {  } },
+	{ title = "V", items = {  } },
+	{ title = "W", items = {  } },
+	{ title = "X", items = {  } },
+	{ title = "Y", items = {  } },
+	{ title = "Z", items = {  } },
+}
+
+
+--Used for displaying row text
+local rowTitles = {}
+
+--Handle row rendering
+local function onRowRender( event )
+	local row = event.row
+	local rowGroup = event.view
+	local label = rowTitles[ row.index ]
+	local color = 0
+		
+	if row.isCategory then
+		color = 255
+	end
+	
+	--Set the row's name
+	row.itemName = label
+	
+	--Create the row's text
+	row.textObj = display.newRetinaText( rowGroup, label, 0, 0, native.systemFontBold, 16 )
+	row.textObj:setTextColor( color )
+	row.textObj:setReferencePoint( display.CenterLeftReferencePoint )
+	row.textObj.x, row.textObj.y = 20, rowGroup.contentHeight * 0.5
+	rowGroup:insert( row.textObj )
+	
+	if not (row.isCategory) then
+		--Create the row's arrow
+		row.arrow = display.newImage( "assets/rowArrow.png", false )
+		row.arrow.x = rowGroup.contentWidth - row.arrow.contentWidth * 2
+		row.arrow.y = rowGroup.contentHeight * 0.5
+		rowGroup:insert( row.arrow )
+	end
+end
+
+--Handle the back button release event
+local function onBackRelease()
+	--Transition in the list, transition out the item selected text and the back button
+	transition.to( list, { x = 0, time = 400, transition = easing.outExpo } )
+	transition.to( itemSelected, { x = display.contentWidth + itemSelected.contentWidth * 0.5, time = 400, transition = easing.outExpo } )
+	transition.to( backButton, { x = 60, alpha = 0, time = 400, transition = easing.outQuad } )
+end
+
+--Create the back button
+backButton = widget.newButton{
+	style = "backSmall",
+	label = "Back", 
+	yOffset = - 3,
+	onRelease = onBackRelease
+}
+backButton.alpha = 0
+backButton.x = 80
+backButton.y = titleBar.y
+
+--Hande row touch events
+local function onRowTouch( event )
+	local row = event.row
+	local background = event.background
+	
+	if event.phase == "press" then
+		print( "Pressed row: " .. row.index )
+		background:setFillColor( 0, 110, 233, 255 )
+
+	elseif event.phase == "release" or event.phase == "tap" then
+		--Update the item selected text
+		itemSelected.text = "You selected " .. row.itemName
+		
+		--Transition out the list, transition in the item selected text and the back button
+		transition.to( list, { x = - list.contentWidth, time = 400, transition = easing.outExpo } )
+		transition.to( itemSelected, { x = display.contentCenterX, time = 400, transition = easing.outExpo } )
+		transition.to( backButton, { x = 40, alpha = 1, time = 400, transition = easing.outQuad } )
+		
+		print( "Tapped and/or Released row: " .. row.index )
+		background:setFillColor( 0, 110, 233, 255 )
+		row.reRender = true
+	end
+end
+
+local function fillRows() 
+	-- insert rows into list (tableView widget)
+	for i = 1, #listItems do
+		--Add the rows category title
+		rowTitles[ #rowTitles + 1 ] = listItems[i].title
+	
+		--Insert the category
+		list:insertRow{
+			height = 24,
+			rowColor = { 150, 160, 180, 200 },
+			onRender = onRowRender,
+			isCategory = true,
+		}
+
+		--Insert the item
+		for j = 1, #listItems[i].items do
+			-- sort the rows
+			table.sort(listItems[i])
+			--Add the rows item title
+			rowTitles[ #rowTitles + 1 ] = listItems[i].items[j]
+		
+			--Insert the item
+			list:insertRow{
+				height = 72,
+				onRender = onRowRender,
+				isCategory = false,
+				listener = onRowTouch
+			}
+		end
+	end
+end
 
 -- Called when the scene's view does not exist:
 function scene:createScene( event )
@@ -59,56 +248,16 @@ function scene:createScene( event )
 		screenGroup:insert( text3 )
 	end
 
-	local bg = display.newImageRect( deviceSwitch.welcomeSplash, deviceSwitch.masterScreenWidth, deviceSwitch.masterScreenHeight)
+	local bg = display.newImageRect(  "assets/Default@2.png", display.contentWidth, display.contentHeight )
 	bg.x = display.contentWidth / 2
 	bg.y = display.contentHeight / 2 --+ display.statusBarHeight
 	
-	local topBoundary = display.screenOriginY + 60
-	local bottomBoundary = display.screenOriginY -290
 
-	list = widget.newTableView {
---		top = top + 10,
---		height = 404,
-		top = topBoundary,
-		bottom = bottomBoundary,
-		--maskFile = "mask454.png",
---		width = 304
-		width = 404
---		height = 504
-	}
-	list.x = 8
 --	list.y = 5
 --	list.maskFile.x - 15
 --	list.maskFile = "mask404.png"
 		-- create embossed text to go on toolbar
-	local sbHeight = display.statusBarHeight
-	local tbHeight = 44
-	local top = sbHeight + tbHeight
 
-	-- create a gradient for the top-half of the toolbar
-	local toolbarGradient = graphics.newGradient( {168, 181, 198, 255 }, {139, 157, 180, 255}, "down" )
-
-	local titleBar = widget.newTabBar{
-		top = sbHeight,
-		gradient = toolbarGradient,
-		bottomFill = { 117, 139, 168, 255 },
-		height = 44
-
-
-	}
-
-	local titleText = display.newEmbossedText( "Project Selection", 0, 0, native.systemFontBold, 20 )
-	titleText:setReferencePoint( display.CenterReferencePoint )
-	titleText:setTextColor( 255 )
-	titleText.x = titleBar.width/2
-	titleText.y = titleBar.y
-
-	-- create a shadow underneath the titlebar (for a nice touch)
-	local shadow = display.newImage( "assets/shadow.png" )
-	shadow:setReferencePoint( display.TopLeftReferencePoint )
-	shadow.x, shadow.y = 0, top
-	shadow.xScale = 320 / shadow.contentWidth
-	shadow.alpha = 0.45
 
 	
 	screenGroup:insert(bg)
@@ -116,8 +265,11 @@ function scene:createScene( event )
 	screenGroup:insert(shadow) 
 	screenGroup:insert(titleBar) 
 	screenGroup:insert(titleText) 
+	screenGroup:insert( itemSelected )
+	screenGroup:insert( backButton )
 	
-	
+	fillRows()
+
 	---- create scene
 	print( "\n3: createScene Project  event")
 end
@@ -137,7 +289,8 @@ function scene:enterScene( event )
 		end
 		memTimer = timer.performWithDelay( 1000, showMem, 1 )
 	end
-	
+--	table.sort(listItems["E"])
+	print( "Project: end exit Project event" )
 end
 
 

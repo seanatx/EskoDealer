@@ -5,7 +5,7 @@
 ---------------------------------------------------------------------------------
 
 local storyboard = require( "storyboard" )
-local appswitch = require( "appSwitch" )
+--local appswitch = require( "appSwitch" )
 local scene = storyboard.newScene()
 local bgrp = require("BgdGroup")
 
@@ -31,7 +31,7 @@ function scene:createScene( event )
 	local screenGroup = self.view
 	
 
-	image = display.newImageRect( deviceSwitch.welcomeSplash, deviceSwitch.masterScreenWidth, deviceSwitch.masterScreenHeight ) 
+	image = display.newImageRect("assets/Default@2.png", display.contentWidth, display.contentHeight )
 	image.x = display.contentWidth / 2
 	image.y = display.contentHeight / 2
 	screenGroup:insert( image )

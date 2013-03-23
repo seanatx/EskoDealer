@@ -3,7 +3,7 @@
 -- scene1.lua
 --
 ---------------------------------------------------------------------------------
-local appswitch = require( "appSwitch" )
+--local appswitch = require( "appSwitch" )
 local storyboard = require( "storyboard" )
 local scrollNav = require("scrollNav")
 local content = require("contentKongs")
@@ -11,7 +11,7 @@ local scene = storyboard.newScene()
 
 local spacing = 20
 local leftMargin = 50
-local topMargin = deviceSwitch.topScrollMargin
+local topMargin = 100
 local scrollbarY = 500
 
 
@@ -66,7 +66,7 @@ function scene:createScene( event )
 	-- Add the scrollbar to the scrollNav
 	self.scrollNav:addScrollBar(scrollbarY)
 	
-	image = display.newImageRect( deviceSwitch.welcomeSplash, deviceSwitch.masterScreenWidth, deviceSwitch.masterScreenHeight )
+	image = display.newImageRect( "assets/Default@2.png", display.contentWidth, display.contentHeight )
 	image.x = display.contentWidth / 2
 	image.y = display.contentHeight / 2
 	image.name = "portrait"

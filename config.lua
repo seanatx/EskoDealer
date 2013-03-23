@@ -32,7 +32,7 @@ elseif string.sub(system.getInfo("model"),1,2) == "iP" and display.pixelHeight >
         {
             width = 320, 
             height = 568,
-            scale = "none", 
+            scale = "zoomEven", 
             xAlign = "center",
             yAlign = "center",
             imageSuffix = 
@@ -52,13 +52,14 @@ elseif string.sub(system.getInfo("model"),1,2) == "iP" and display.pixelHeight >
     }
 
 elseif string.sub(system.getInfo("model"),1,2) == "iP" then
+	print("iPhone 3 & 4 configuration")
     application = 
     {
         content =
         {
             width = 320,
             height = 480,
-            scale = "letterBox",
+            scale = "zoomEven",
             xAlign = "center",
             yAlign = "center",
             imageSuffix = 
@@ -83,7 +84,7 @@ elseif display.pixelHeight / display.pixelWidth > 1.72 then
         {
             width = 320,
             height = 570,
-            scale = "letterBox",
+            scale = "zoomEven",
             xAlign = "center",
             yAlign = "center",
             imageSuffix = 
@@ -100,7 +101,7 @@ else
         {
             width = 320,
             height = 512,
-            scale = "letterBox",
+            scale = "zoomEven",
             xAlign = "center",
             yAlign = "center",
             imageSuffix = 

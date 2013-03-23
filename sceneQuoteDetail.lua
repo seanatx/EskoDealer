@@ -5,7 +5,7 @@
 ---------------------------------------------------------------------------------
 
 local storyboard = require( "storyboard" )
-local appswitch = require( "appSwitch" )
+--local appswitch = require( "appSwitch" )
 local stringutils = require( "stringUtils" )
 local email = require( "email" )
 local ui = require( "ui")
@@ -16,6 +16,8 @@ local emailSending = nil
 local nameOfQuoteToGet
 local image
 local top = display.statusBarHeight*2
+local database = require( "DataBase" )
+local db
 local listRecsDetailQuote = {}
 local listMaster = nil
 local db
@@ -37,28 +39,6 @@ local function onSceneTouch( self, event )
 		
 		return true
 	end
-end
-
-local function loadData()
-	local sql = "select * from " ..nameOfQuoteToGet --listRecsDetailQuote[_G.currIdx].name 
-	local i = 0
---	print( " ready to query details: " ..sql)
-	for a in db:nrows(sql) do
-		listRecsDetailQuote[#listRecsDetailQuote+1] =
-		{
-		id = a.id,
-		productcode = a.ProductCode,
-		description = a.Description,
-		quantity = a.Quantity,
-		listprice = a.ListPrice,
-		discountable = a.Discountable,
-		mcprice = a.MCPrice,
-		master = a.Master,
-		subordinate = a.Subordinate
-		}
-
-	end
---	print( "finsihed loading detail data" )
 end
 
 local function resetMachinePrice()
@@ -153,14 +133,14 @@ local function showRecords()
 		local color = 0
 		
 --		print( " in on row render description" )
-		row.textObj = display.newRetinaText( listRecsDetailQuote[idx].description, 0, 0, "Helvetica", deviceSwitch.listRowTextSize1 )
+		row.textObj = display.newRetinaText( listRecsDetailQuote[idx].description, 0, 0, "Helvetica", 18)
 		row.textObj:setTextColor( color )
 		row.textObj:setReferencePoint( display.CenterLeftReferencePoint )
 		row.textObj.x = 20
 		row.textObj.y = rowGroup.contentHeight * 0.35
 		
 --		print( " in on row render prod code" )
-		row.textObj2 = display.newRetinaText( listRecsDetailQuote[idx].productcode, 0, 0, "Helvetica", deviceSwitch.listRowTextSize2 )
+		row.textObj2 = display.newRetinaText( listRecsDetailQuote[idx].productcode, 0, 0, "Helvetica", 14 )
 		row.textObj2:setTextColor( color )
 		row.textObj2:setReferencePoint( display.CenterLeftReferencePoint )
 		row.textObj2.x = 20
@@ -172,7 +152,7 @@ local function showRecords()
 		
 		row.delButton = widget.newButton{
 	        id = row.index,
-	        top = rowGroup.contentHeight * deviceSwitch.rowDelButtonAdjustY,
+	        top = rowGroup.contentHeight * .2,
 	        left = rowGroup.contentWidth - 80,
 	        default = "deletebtn.png",
 	        width = 64, height = 33,
@@ -185,7 +165,7 @@ local function showRecords()
 	    	    
 		row.linkButton = widget.newButton{
 	        id = row.index,
-	        top = rowGroup.contentHeight * deviceSwitch.rowLinkButtonAdjustY,
+	        top = rowGroup.contentHeight * .2,
 	        left = rowGroup.contentWidth - rowGroup.contentWidth + 10,
 	        default = "assets/link.png",
 	        width = 24, height = 24,
@@ -259,10 +239,63 @@ end
 local function emailBtnRelease( event )
 	-- compose an HTML email 
 	if emailSending == nil then
-		emailSending = email.new( "XE10", listRecsDetailQuote )
+		emailSending = email.new( nameOfQuoteToGet, listRecsDetailQuote )
 	end
 	emailSending:send()	
 end
+
+	--Setup the price bar 
+	print( "starting priceBar" )
+	priceBar = ui.newButton{
+		default = "assets/navBar@2.png",
+--		default = deviceSwitch.navBar,
+		onRelease = scrollToTop
+	}
+	priceBar.x = display.contentWidth*.5
+	--print ("priceBar coords: " ..display.contentWidth*.5 .."," ..display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
+--	priceBar.y = math.floor(display.screenOriginY + display.statusBarHeight + 19) --navBar.height*0.5)
+	priceBar.y = math.floor(display.screenOriginY + display.statusBarHeight+20)
+	resetMachinePrice()
+	priceHeader = display.newText("Price: $" ..string.format("%i",MachinePrice), 0, 0, native.systemFontBold, 16)
+	priceHeader:setTextColor(255, 255, 255)
+	priceHeader.x = display.contentWidth*.5
+	priceHeader.y = priceBar.y
+
+	
+	--	--Setup the back button
+	backBtn = ui.newButton{ 
+		default = "assets/backButton.png", 
+		over = "assets/backButton_over.png", 
+		onRelease = backBtnRelease
+	}
+	backBtn.x = math.floor(backBtn.width/2) + 5 
+	backBtn.y = priceHeader.y 
+	backBtn.alpha = 1
+	
+	
+		--	--Setup the email button
+	emailBtn = ui.newButton{ 
+		default = "assets/email.png", 
+		over = "assets/email-down.png", 
+		onRelease = emailBtnRelease
+	}
+	emailBtn.x = display.contentWidth - emailBtn.width + 5 
+	emailBtn.y = priceHeader.y 
+	emailBtn.alpha = 1
+	
+	local bg = display.newImageRect(   "assets/Default@2.png", display.contentWidth, display.contentHeight )
+--	local bg = display.newImageRect( deviceSwitch.globalBackgroundImage, 360, 570 )
+	bg.x = display.contentWidth / 2
+	bg.y = display.contentHeight / 2 + display.statusBarHeight
+	list = widget.newTableView {
+--		top = display.contentHeight-100,
+		top = display.statusBarHeight*3,
+		height = 864,
+		width = 758,
+--		height = device.contentHeight - 200,
+		maskFile = "mask758.png"
+	}
+	list.x = 1
 
 -- Called when the scene's view does not exist:
 function scene:createScene( event )
@@ -270,10 +303,6 @@ function scene:createScene( event )
 	screenGroup = self.view
 	nameOfQuoteToGet = event.params.nameToGet
 	db = event.params.database
-	--image = display.newImageRect( "assets/Default-568h@2x.png", 360, 570 )
-	--image.x = display.contentWidth / 2
-	--image.y = display.contentHeight / 2
-	--screenGroup:insert( image )
 	
 	if (_G.debug) then
 		image = display.newRect(0, 0, display.contentWidth, display.contentHeight)
@@ -300,70 +329,27 @@ function scene:createScene( event )
 		screenGroup:insert( text3 )
 	end
 	
-	-- next 2 lines draw a grid (see grid.lua )
-	-- local t = createGrid( design, data )
-	-- t.x, t.y = 30, 150
 --	print( "\n1: starting detail list loading  Quote  event")
-	local bg = display.newImageRect( deviceSwitch.welcomeSplash, deviceSwitch.masterScreenWidth, deviceSwitch.masterScreenHeight)
---	local bg = display.newImageRect( deviceSwitch.globalBackgroundImage, 360, 570 )
-	bg.x = display.contentWidth / 2
-	bg.y = display.contentHeight / 2 + display.statusBarHeight
-	list = widget.newTableView {
---		top = top + 40,
-		top = deviceSwitch.listViewTop,
-		height = 804,
---		height = device.contentHeight - 200,
---		maskFile = "mask404.png"
-	}
+
+	
+	print( "\n\n -----------list area width: ".. display.contentWidth  .. " and " .. display.contentHeight .. "----------------------")
 	listMaster = list
 	screenGroup:insert(bg)
 	screenGroup:insert(list)
-
-	print( "\n1: inserted detailed bg and list, createScene Quote  event")
-	
-	loadData()
-	showRecords()
-	
-	--Setup the price bar 
-	print( "starting priceBar" )
-	priceBar = ui.newButton{
---		default = "assets/navBar@2.png",
-		default = deviceSwitch.navBar,
-		onRelease = scrollToTop
-	}
-	priceBar.x = display.contentWidth*.5
-	--print ("priceBar coords: " ..display.contentWidth*.5 .."," ..display.screenOriginY + display.statusBarHeight + navBar.height*0.5)
---	priceBar.y = math.floor(display.screenOriginY + display.statusBarHeight + 19) --navBar.height*0.5)
-	priceBar.y = deviceSwitch.priceBarYloc
-	resetMachinePrice()
-	priceHeader = display.newText("Price: $" ..string.format("%i",MachinePrice), 0, 0, native.systemFontBold, 16)
-	priceHeader:setTextColor(255, 255, 255)
-	priceHeader.x = display.contentWidth*.5
-	priceHeader.y = priceBar.y
 	screenGroup:insert( priceBar )
 	screenGroup:insert( priceHeader )
-	
-	--	--Setup the back button
-	backBtn = ui.newButton{ 
-		default = "assets/backButton.png", 
-		over = "assets/backButton_over.png", 
-		onRelease = backBtnRelease
-	}
-	backBtn.x = math.floor(backBtn.width/2) + 5 
-	backBtn.y = priceHeader.y 
-	backBtn.alpha = 1
 	screenGroup:insert( backBtn )
-	
-		--	--Setup the email button
-	emailBtn = ui.newButton{ 
-		default = "assets/email.png", 
-		over = "assets/email-down.png", 
-		onRelease = emailBtnRelease
-	}
-	emailBtn.x = display.contentWidth - emailBtn.width + 5 
-	emailBtn.y = priceHeader.y 
-	emailBtn.alpha = 1
 	screenGroup:insert( emailBtn )
+	
+	print( "\n1: inserted detailed bg and list, createScene Quote  event")
+	
+--	loadData()
+	db = database.db
+	listRecsDetailQuote = database:loadQuoteDetailDataIntoTable(listRecsDetailQuote, "select * from " ..nameOfQuoteToGet)
+	showRecords()
+	
+--	resetMachinePrice()
+--	priceHeader.text = "Price: $" .. MachinePrice
 	 
 --	priceHeader.x = display.contentWidth - ( backBtn.contentWidth/2 )
 
@@ -410,9 +396,15 @@ function scene:enterScene( event )
 		memTimer = timer.performWithDelay( 1000, showMem, 1 )
 	end
 	
+--	listRecsQuoteMain = database:loadDataIntoTable(listRecsQuoteMain, "select * from " ..nameOfQuoteToGet)
+--	showRecords()
+	
 	transition.to(priceBar, {time=400, alpha=1 })
 	transition.to(priceHeader, {time=400, alpha=1 })
 	transition.to(backBtn, {time=400, alpha=1 })
+	
+	resetMachinePrice()
+	priceHeader.text = "Price: $" .. MachinePrice
 end
 
 
